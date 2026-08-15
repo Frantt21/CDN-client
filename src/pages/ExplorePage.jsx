@@ -1,18 +1,32 @@
 import { useMemo, useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { avatarUrl } from '../api'
 import { useAuth } from '../auth/AuthContext'
-import { ImageCard } from '../components/ImageCard'
+import Masonry from '../components/Masonry'
 import { useFeed } from '../hooks/useFeed'
+import { imageToMasonryItem } from '../utils/masonry'
+
+function Avatar({ user, size = 'avatar' }) {
+  if (user.avatarUrl) {
+    return (
+      <span className={`${size} avatar-img`}>
+        <img src={avatarUrl(user.id)} alt="" loading="lazy" />
+      </span>
+    )
+  }
+  return <span className={size}>{user.nickname[0]?.toUpperCase()}</span>
+}
 
 export function ExplorePage() {
   const { user } = useAuth()
-  const { images, users, loading, savedIds, toggleSave } = useFeed()
+  const navigate = useNavigate()
+  const { images, users, loading, savedIds, toggleSave, removeImage } = useFeed()
   const [params, setParams] = useSearchParams()
   const [query, setQuery] = useState('')
 
-  const tab = params.get('tab') === 'saved' ? 'saved' : 'search'
+  const tab = params.get('tab') === 'users' ? 'users' : 'images'
   const setTab = (next) => {
-    if (next === 'saved') setParams({ tab: 'saved' })
+    if (next === 'users') setParams({ tab: 'users' })
     else setParams({})
   }
 
@@ -34,24 +48,27 @@ export function ExplorePage() {
     )
   }, [allImages, q, ownerNames])
 
-  const recommended = useMemo(
-    () => allImages.slice(0, 6),
-    [allImages],
-  )
+  const recommended = useMemo(() => allImages.slice(0, 12), [allImages])
 
-  const savedImages = useMemo(
-    () => allImages.filter((img) => savedIds.has(img.id)),
-    [allImages, savedIds],
-  )
+  const handleDelete = async (id) => {
+    try {
+      await removeImage(id)
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Error al borrar la imagen')
+    }
+  }
 
-  const renderCard = (img) => (
-    <ImageCard
-      key={img.id}
-      image={img}
-      ownerName={ownerNames.get(img.userId)}
-      saved={savedIds.has(img.id)}
-      onToggleSave={user ? toggleSave : undefined}
-    />
+  const items = useMemo(
+    () =>
+      (q ? searchResults : recommended).map((img) => ({
+        ...imageToMasonryItem(img, ownerNames.get(img.userId)),
+        saved: savedIds.has(img.id),
+        onToggleSave: user ? toggleSave : undefined,
+        canDelete: Boolean(user && (user.userId === img.userId || user.role === 'admin')),
+        onDelete: user ? handleDelete : undefined,
+      })),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [searchResults, recommended, savedIds],
   )
 
   return (
@@ -62,37 +79,43 @@ export function ExplorePage() {
         <button
           type="button"
           role="tab"
-          aria-selected={tab === 'search'}
-          className={`btn ${tab === 'search' ? 'btn-primary' : 'btn-secondary'}`}
-          onClick={() => setTab('search')}
+          aria-selected={tab === 'images'}
+          className={`btn ${tab === 'images' ? 'btn-primary' : 'btn-secondary'}`}
+          onClick={() => setTab('images')}
         >
-          Buscar
+          Imágenes
         </button>
         <button
           type="button"
           role="tab"
-          aria-selected={tab === 'saved'}
-          className={`btn ${tab === 'saved' ? 'btn-primary' : 'btn-secondary'}`}
-          onClick={() => setTab('saved')}
+          aria-selected={tab === 'users'}
+          className={`btn ${tab === 'users' ? 'btn-primary' : 'btn-secondary'}`}
+          onClick={() => setTab('users')}
         >
-          Guardados
+          Usuarios
         </button>
       </div>
 
-      {tab === 'saved' ? (
+      {tab === 'users' ? (
         <section>
-          <h2>Guardados</h2>
-          {!user ? (
-            <p className="muted">Iniciá sesión para ver tus imágenes guardadas.</p>
-          ) : loading ? (
+          <h2>Usuarios</h2>
+          {loading ? (
             <p>Cargando…</p>
-          ) : savedImages.length === 0 ? (
-            <p className="muted">
-              Todavía no guardaste ninguna imagen. Usá el ícono de marcador en el feed para
-              guardarlas.
-            </p>
+          ) : (users ?? []).length === 0 ? (
+            <p className="muted">No hay usuarios registrados.</p>
           ) : (
-            <div className="grid">{savedImages.map(renderCard)}</div>
+            <ul className="user-list">
+              {(users ?? []).map((u) => (
+                <li key={u.id}>
+                  <Link to={`/users/${u.username}`} className="user-chip">
+                    <Avatar user={u} />
+                    <span>
+                      <strong>{u.nickname}</strong> <small>@{u.username}</small>
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
           )}
         </section>
       ) : (
@@ -115,7 +138,11 @@ export function ExplorePage() {
             ) : (
               <>
                 <h2>Resultados</h2>
-                <div className="grid">{searchResults.map(renderCard)}</div>
+                <Masonry
+                  items={items}
+                  animateFrom="bottom"
+                  onItemClick={(item) => navigate(`/images/${item.id}`)}
+                />
               </>
             )
           ) : (
@@ -124,7 +151,11 @@ export function ExplorePage() {
               {recommended.length === 0 ? (
                 <p className="muted">No hay imágenes todavía.</p>
               ) : (
-                <div className="grid">{recommended.map(renderCard)}</div>
+                <Masonry
+                  items={items}
+                  animateFrom="bottom"
+                  onItemClick={(item) => navigate(`/images/${item.id}`)}
+                />
               )}
             </>
           )}

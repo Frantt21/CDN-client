@@ -38,6 +38,11 @@ export function imageUrl(id) {
   return `${API_BASE}/images/${id}/download`
 }
 
+/** URL del avatar de un usuario. */
+export function avatarUrl(id) {
+  return `${API_BASE}/users/${id}/avatar`
+}
+
 /** URL de descarga (attachment) de una imagen. */
 export function imageDownloadUrl(id) {
   return `${API_BASE}/images/${id}/download?download=true`
@@ -83,6 +88,12 @@ export const api = {
 
   updateProfile: (id, data) =>
     request(`/users/${id}`, { method: 'PUT', body: JSON.stringify(data) }, true),
+
+  updateAvatar: (id, file) => {
+    const form = new FormData()
+    form.append('file', file)
+    return request(`/users/${id}/avatar`, { method: 'POST', body: form }, true)
+  },
 
   getImages: (userId) =>
     request(`/images${userId ? `?userId=${userId}` : ''}`),
