@@ -10,7 +10,7 @@ interface ImageCardProps {
 
 export function ImageCard({ image, ownerName, onDelete }: ImageCardProps) {
   const { user } = useAuth()
-  const isOwner = user?.userId === image.userId
+  const canDelete = user?.userId === image.userId || user?.role === 'admin'
 
   return (
     <figure className="image-card">
@@ -25,7 +25,7 @@ export function ImageCard({ image, ownerName, onDelete }: ImageCardProps) {
             {ownerName ?? `usuario #${image.userId}`} ·{' '}
             {new Date(image.createdAt).toLocaleDateString('es-AR')}
           </span>
-          {isOwner && onDelete && (
+          {canDelete && onDelete && (
             <button type="button" className="btn btn-danger" onClick={() => onDelete(image.id)}>
               Borrar
             </button>

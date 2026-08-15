@@ -4,6 +4,7 @@ export interface AuthResponse {
   userId: number
   nickname: string
   username: string
+  role: string
   token: string
 }
 
@@ -11,6 +12,7 @@ export interface UserDto {
   id: number
   nickname: string
   username: string
+  role: string
   description: string | null
   createdAt: string
 }

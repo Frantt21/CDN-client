@@ -290,6 +290,21 @@ h2 {
   font-size: 1.6rem;
 }
 
+.role-badge {
+  display: inline-block;
+  margin-left: 0.5rem;
+  padding: 0.05rem 0.5rem;
+  border-radius: 999px;
+  background: rgba(79, 140, 255, 0.15);
+  border: 1px solid var(--primary);
+  color: var(--primary);
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  vertical-align: middle;
+}
+
 /* Utilidades */
 .error {
   background: rgba(229, 72, 77, 0.12);

@@ -22,7 +22,10 @@ export function NavBar() {
       <div className="nav-user">
         {user ? (
           <>
-            <NavLink to={`/users/${user.username}`}>{user.nickname}</NavLink>
+            <NavLink to={`/users/${user.username}`}>
+              {user.nickname}
+              {user.role === 'admin' && <span className="role-badge">admin</span>}
+            </NavLink>
             <button type="button" className="btn btn-secondary" onClick={handleLogout}>
               Salir
             </button>

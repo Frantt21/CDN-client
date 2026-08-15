@@ -86,6 +86,12 @@ export interface RegisterData {
   description?: string
 }
 
+export interface UpdateProfileData {
+  nickname: string
+  username: string
+  description?: string | null
+}
+
 export const api = {
   register: (data: RegisterData) =>
     request<AuthResponse>('/auth/register', { method: 'POST', body: JSON.stringify(data) }),
@@ -96,6 +102,9 @@ export const api = {
   getUsers: () => request<UserDto[]>('/users'),
 
   getUserByUsername: (username: string) => request<UserDto>(`/users/${username}`),
+
+  updateProfile: (id: number, data: UpdateProfileData) =>
+    request<UserDto>(`/users/${id}`, { method: 'PUT', body: JSON.stringify(data) }, true),
 
   getImages: (userId?: number) =>
     request<ImageDto[]>(`/images${userId ? `?userId=${userId}` : ''}`),
