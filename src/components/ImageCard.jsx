@@ -1,14 +1,7 @@
 import { imageUrl } from '../api'
 import { useAuth } from '../auth/AuthContext'
-import type { ImageDto } from '../types'
 
-interface ImageCardProps {
-  image: ImageDto
-  ownerName?: string
-  onDelete?: (id: number) => void
-}
-
-export function ImageCard({ image, ownerName, onDelete }: ImageCardProps) {
+export function ImageCard({ image, ownerName, onDelete }) {
   const { user } = useAuth()
   const canDelete = user?.userId === image.userId || user?.role === 'admin'
 

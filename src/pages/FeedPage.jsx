@@ -1,52 +1,25 @@
-import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { api } from '../api'
 import { useAuth } from '../auth/AuthContext'
 import { ImageCard } from '../components/ImageCard'
-import type { ImageDto, UserDto } from '../types'
+import { useFeed } from '../hooks/useFeed'
 
-export function HomePage() {
+export function FeedPage() {
   const { user } = useAuth()
-  const [images, setImages] = useState<ImageDto[]>([])
-  const [users, setUsers] = useState<UserDto[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const { images, users, loading, error, removeImage } = useFeed()
 
-  const load = useCallback(async () => {
-    setLoading(true)
+  const handleDelete = async (id) => {
     try {
-      const [imgs, usrs] = await Promise.all([api.getImages(), api.getUsers()])
-      setImages(imgs)
-      setUsers(usrs)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error al cargar los datos')
-    } finally {
-      setLoading(false)
-    }
-  }, [])
-
-  useEffect(() => {
-    void load()
-  }, [load])
-
-  const handleDelete = async (id: number) => {
-    try {
-      await api.deleteImage(id)
-      setImages((prev) => prev.filter((img) => img.id !== id))
+      await removeImage(id)
     } catch (err) {
       alert(err instanceof Error ? err.message : 'Error al borrar la imagen')
     }
   }
 
-  const ownerNames = new Map(users.map((u) => [u.id, u.nickname]))
+  const ownerNames = new Map((users ?? []).map((u) => [u.id, u.nickname]))
 
   return (
     <main className="container">
-      <section className="hero">
-        <h1>CDN-backend</h1>
-        <p>Galería pública de imágenes subidas por la comunidad.</p>
-      </section>
-
+      <h1>Feed</h1>
       {error && <p className="error">{error}</p>}
       {loading ? (
         <p>Cargando…</p>

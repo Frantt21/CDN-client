@@ -1,23 +1,22 @@
-import { useEffect, useState, type FormEvent } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { api, ApiError } from '../api'
 import { useAuth } from '../auth/AuthContext'
 import { ImageCard } from '../components/ImageCard'
-import type { ImageDto, UserDto } from '../types'
 
 export function UserProfilePage() {
   const { username = '' } = useParams()
   const navigate = useNavigate()
   const { user: currentUser, updateUser } = useAuth()
-  const [user, setUser] = useState<UserDto | null>(null)
-  const [images, setImages] = useState<ImageDto[]>([])
-  const [error, setError] = useState<string | null>(null)
+  const [user, setUser] = useState(null)
+  const [images, setImages] = useState([])
+  const [error, setError] = useState(null)
 
   const [editing, setEditing] = useState(false)
   const [nickname, setNickname] = useState('')
   const [editUsername, setEditUsername] = useState('')
   const [description, setDescription] = useState('')
-  const [saveError, setSaveError] = useState<string | null>(null)
+  const [saveError, setSaveError] = useState(null)
   const [saving, setSaving] = useState(false)
 
   const isOwnProfile = currentUser?.userId === user?.id
@@ -54,7 +53,7 @@ export function UserProfilePage() {
     setEditing(true)
   }
 
-  const handleSave = async (e: FormEvent) => {
+  const handleSave = async (e) => {
     e.preventDefault()
     if (!user) return
     setSaveError(null)
@@ -92,7 +91,7 @@ export function UserProfilePage() {
     )
   }
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = async (id) => {
     try {
       await api.deleteImage(id)
       setImages((prev) => prev.filter((img) => img.id !== id))

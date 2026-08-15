@@ -1,6 +1,6 @@
 # CDN-client
 
-Frontend en **React + Vite + TypeScript + React Router** para la API de CDN-backend.
+Frontend en **React + Vite + JavaScript + React Router** para la API de CDN-backend.
 
 > ⚠️ Vive en el repo pero está en `.gitignore` (no se trackea).
 
@@ -17,7 +17,7 @@ npm install
 npm run dev        # → http://localhost:5173
 ```
 
-Build de producción: `npm run build` (tsc + vite).
+Build de producción: `npm run build` (vite).
 
 ## Configuración del proxy
 
@@ -28,26 +28,25 @@ El dev server de Vite proxya `/api` hacia la API. Por defecto apunta a
 VITE_API_TARGET=http://localhost:5220 npm run dev
 ```
 
-(La clave está en `vite.config.ts` → `server.proxy['/api']`.)
+(La clave está en `vite.config.js` → `server.proxy['/api']`.)
 
 ## Estructura
 
 ```
 src/
-├── api.ts           cliente HTTP (fetch) con JWT, errores tipados y endpoints
-├── types.ts         DTOs espejo del backend (UserDto, ImageDto, AuthResponse)
+├── api.js           cliente HTTP (fetch) con JWT, errores tipados y endpoints
 ├── auth/
-│   └── AuthContext.tsx   sesión global (login/registro/logout, token en localStorage)
+│   └── AuthContext.jsx   sesión global (login/registro/logout, token en localStorage)
 ├── components/
-│   ├── NavBar.tsx        navegación + badge admin
-│   ├── ProtectedRoute.tsx  redirige a /login si no hay sesión
-│   └── ImageCard.tsx     tarjeta de imagen (vista previa, metadata, borrar)
+│   ├── NavBar.jsx        navegación + badge admin
+│   ├── ProtectedRoute.jsx  redirige a /login si no hay sesión
+│   └── ImageCard.jsx     tarjeta de imagen (vista previa, metadata, borrar)
 └── pages/
-    ├── HomePage.tsx          galería pública + lista de usuarios
-    ├── LoginPage.tsx         formulario de login
-    ├── RegisterPage.tsx      formulario de registro
-    ├── UploadPage.tsx        subida de imagen (requiere sesión)
-    └── UserProfilePage.tsx   perfil + edición de perfil (dueño)
+    ├── HomePage.jsx          galería pública + lista de usuarios
+    ├── LoginPage.jsx         formulario de login
+    ├── RegisterPage.jsx      formulario de registro
+    ├── UploadPage.jsx        subida de imagen (requiere sesión)
+    └── UserProfilePage.jsx   perfil + edición de perfil (dueño)
 ```
 
 ## Rutas
