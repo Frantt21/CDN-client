@@ -1,8 +1,26 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { api, getToken } from '../api'
+import { api, getStoredUser, getToken } from '../api'
+import i18n from '../i18n'
+import { readCached, writeCached } from '../utils/cache'
 
 const CACHE_KEY = 'cdn_feed_cache'
 const POLL_INTERVAL_MS = 15_000
+const SAVED_TTL_MS = 7 * 24 * 60 * 60 * 1000
+
+function savedCacheKey() {
+  const id = getStoredUser()?.id
+  return `cdn_saved_${id ?? 'anon'}`
+}
+
+function readSavedCache() {
+  const value = readCached(savedCacheKey(), SAVED_TTL_MS)
+  if (!Array.isArray(value)) return null
+  return new Set(value)
+}
+
+function writeSavedCache(ids) {
+  writeCached(savedCacheKey(), [...ids])
+}
 
 function readCache() {
   try {
@@ -31,9 +49,13 @@ export function useFeed() {
   const [images, setImages] = useState(null)
   const [users, setUsers] = useState(null)
   const [error, setError] = useState(null)
-  const [savedIds, setSavedIds] = useState(() => new Set())
+  const [savedIds, setSavedIds] = useState(() => {
+    if (!getToken()) return new Set()
+    return readSavedCache() ?? new Set()
+  })
   const latest = useRef({ images: [], users: [] })
   const latestSaved = useRef(new Set())
+  const firstSavedRender = useRef(true)
 
   useEffect(() => {
     latest.current = { images: images ?? [], users: users ?? [] }
@@ -41,6 +63,14 @@ export function useFeed() {
 
   useEffect(() => {
     latestSaved.current = savedIds
+  }, [savedIds])
+
+  useEffect(() => {
+    if (firstSavedRender.current) {
+      firstSavedRender.current = false
+      return
+    }
+    writeSavedCache(savedIds)
   }, [savedIds])
 
   const loadSaved = useCallback(async () => {
@@ -64,7 +94,7 @@ export function useFeed() {
       writeCache(imgs, usrs)
       setError(null)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error al cargar los datos')
+      setError(err instanceof Error ? err.message : i18n.t('feed.loadError'))
     }
   }, [])
 
@@ -109,7 +139,7 @@ export function useFeed() {
         })
       }
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Error al guardar la imagen')
+      alert(err instanceof Error ? err.message : i18n.t('feed.saveError'))
     }
   }, [])
 
@@ -127,7 +157,7 @@ export function useFeed() {
         return next
       })
     } catch (err) {
-      throw err instanceof Error ? err : new Error('Error al borrar la imagen')
+      throw err instanceof Error ? err : new Error(i18n.t('feed.deleteError'))
     }
   }, [])
 

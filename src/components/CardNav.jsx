@@ -1,6 +1,9 @@
 import { useLayoutEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Link, useNavigate } from 'react-router-dom';
 import { gsap } from 'gsap';
+import { avatarUrl } from '../api';
+import { useAuth } from '../auth/AuthContext';
 import './CardNav.css';
 
 function ArrowUpRightIcon() {
@@ -38,6 +41,8 @@ const CardNav = ({
   ctaTo = '/upload',
 }) => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
+  const { user } = useAuth();
   const [isHamburgerOpen, setIsHamburgerOpen] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const navRef = useRef(null);
@@ -171,7 +176,7 @@ const CardNav = ({
               }
             }}
             role="button"
-            aria-label={isExpanded ? 'Close menu' : 'Open menu'}
+            aria-label={isExpanded ? t('nav.menuClose') : t('nav.menuOpen')}
             aria-expanded={isExpanded}
             tabIndex={0}
             style={{ color: menuColor || '#F2F4F3' }}
@@ -190,14 +195,32 @@ const CardNav = ({
             )}
           </div>
 
-          <button
-            type="button"
-            className="card-nav-cta-button"
-            style={{ backgroundColor: buttonBgColor, color: buttonTextColor }}
-            onClick={() => navigate(ctaTo)}
-          >
-            {ctaLabel}
-          </button>
+          <div className="card-nav-actions">
+            <button
+              type="button"
+              className="card-nav-cta-button"
+              style={{ backgroundColor: buttonBgColor, color: buttonTextColor }}
+              onClick={() => navigate(ctaTo)}
+            >
+              {ctaLabel}
+            </button>
+            {user && (
+              <Link
+                className="card-nav-avatar"
+                to={`/users/${user.username}`}
+                aria-label={t('nav.profile')}
+                title={user.nickname}
+              >
+                {user.avatarUrl ? (
+                  <img src={avatarUrl(user.id)} alt="" />
+                ) : (
+                  <span className="card-nav-avatar-initial">
+                    {user.nickname[0]?.toUpperCase()}
+                  </span>
+                )}
+              </Link>
+            )}
+          </div>
         </div>
 
         <div className="card-nav-content" aria-hidden={!isExpanded}>

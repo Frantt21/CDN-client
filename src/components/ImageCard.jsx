@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { imageUrl } from '../api'
 import { useAuth } from '../auth/AuthContext'
 
@@ -21,6 +22,7 @@ function BookmarkIcon() {
 
 export function ImageCard({ image, ownerName, onDelete, saved = false, onToggleSave }) {
   const { user } = useAuth()
+  const { t } = useTranslation()
   const canDelete = user?.userId === image.userId || user?.role === 'admin'
 
   return (
@@ -33,8 +35,8 @@ export function ImageCard({ image, ownerName, onDelete, saved = false, onToggleS
         {image.description && <p>{image.description}</p>}
         <div className="image-meta">
           <span className="muted">
-            {ownerName ?? `usuario #${image.userId}`} ·{' '}
-            {new Date(image.createdAt).toLocaleDateString('es-AR')}
+            {ownerName ?? t('common.userFallback', { id: image.userId })} ·{' '}
+            {new Date(image.createdAt).toLocaleDateString()}
           </span>
           <div className="image-actions">
             {user && onToggleSave && (
@@ -42,7 +44,7 @@ export function ImageCard({ image, ownerName, onDelete, saved = false, onToggleS
                 type="button"
                 className={`btn btn-icon bookmark-btn${saved ? ' saved' : ''}`}
                 onClick={() => onToggleSave(image.id)}
-                aria-label={saved ? 'Quitar de guardados' : 'Guardar imagen'}
+                aria-label={saved ? t('common.saved') : t('common.save')}
                 aria-pressed={saved}
               >
                 <BookmarkIcon />
@@ -54,7 +56,7 @@ export function ImageCard({ image, ownerName, onDelete, saved = false, onToggleS
                 className="btn btn-danger"
                 onClick={() => onDelete(image.id)}
               >
-                Borrar
+                {t('common.delete')}
               </button>
             )}
           </div>

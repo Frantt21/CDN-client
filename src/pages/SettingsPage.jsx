@@ -1,7 +1,10 @@
+import { useTranslation } from 'react-i18next'
 import { Link, useNavigate } from 'react-router-dom'
+import { setLanguage } from '../i18n'
 import { useAuth } from '../auth/AuthContext'
 
 export function SettingsPage() {
+  const { t, i18n } = useTranslation()
   const { logout } = useAuth()
   const navigate = useNavigate()
 
@@ -12,18 +15,33 @@ export function SettingsPage() {
 
   return (
     <main className="container narrow">
-      <h1>Settings</h1>
-      <p className="muted">
-        Próximamente: preferencias de cuenta, tema y notificaciones.
-      </p>
-      <div style={{ marginTop: '1.5rem' }}>
-        <button type="button" className="btn btn-danger" onClick={handleLogout}>
-          Cerrar sesión
-        </button>
+      <h1>{t('settings.title')}</h1>
+      <div className="dialog-card">
+        <p className="muted">{t('settings.comingSoon')}</p>
+
+        <label className="form-label">
+          {t('settings.language')}
+          <select
+            value={i18n.language?.startsWith('en') ? 'en' : 'es'}
+            onChange={(e) => setLanguage(e.target.value)}
+          >
+            <option value="es">Español</option>
+            <option value="en">English</option>
+          </select>
+        </label>
+
+        <div style={{ marginTop: '1.25rem' }}>
+          <button type="button" className="btn btn-danger" onClick={handleLogout}>
+            {t('settings.logout')}
+          </button>
+        </div>
+
+        <p>
+          <Link to="/" className="btn btn-primary">
+            {t('common.backToHome')}
+          </Link>
+        </p>
       </div>
-      <p>
-        <Link to="/">← Volver al inicio</Link>
-      </p>
     </main>
   )
 }

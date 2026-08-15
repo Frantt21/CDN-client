@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { AuthProvider, useAuth } from './auth/AuthContext'
 import CardNav from './components/CardNav'
@@ -24,6 +25,7 @@ function App() {
 
 function AppContent() {
   const { user } = useAuth()
+  const { t } = useTranslation()
 
   const profileTo = user ? `/users/${user.username}` : '/login'
   const savedTo = user ? `/users/${user.username}?tab=saved` : '/login'
@@ -31,32 +33,34 @@ function AppContent() {
   const navItems = useMemo(
     () => [
       {
-        label: 'Inicio',
+        label: t('nav.home'),
         bgColor: '#21161A',
         textColor: '#F2F4F3',
         links: [
-          { label: 'Feed', ariaLabel: 'Ver el feed', to: '/' },
-          { label: 'Perfil', ariaLabel: 'Ver tu perfil', to: profileTo },
-          { label: 'Ajustes', ariaLabel: 'Abrir ajustes', to: '/settings' },
+          { label: t('nav.feed'), ariaLabel: t('nav.feed'), to: '/' },
+          { label: t('nav.profile'), ariaLabel: t('nav.profile'), to: profileTo },
+          { label: t('nav.settings'), ariaLabel: t('nav.settings'), to: '/settings' },
         ],
       },
       {
-        label: 'Explorar',
+        label: t('nav.explore'),
         bgColor: '#21161A',
         textColor: '#F2F4F3',
         links: [
-          { label: 'Buscar', ariaLabel: 'Buscar imágenes', to: '/explore' },
-          { label: 'Guardados', ariaLabel: 'Ver tus imágenes guardadas', to: savedTo },
+          { label: t('nav.search'), ariaLabel: t('nav.search'), to: '/explore' },
+          { label: t('nav.saved'), ariaLabel: t('nav.saved'), to: savedTo },
         ],
       },
       {
-        label: 'Subir',
+        label: t('nav.upload'),
         bgColor: '#49111C',
         textColor: '#F2F4F3',
-        links: [{ label: 'Subir imagen', ariaLabel: 'Subir una imagen', to: '/upload' }],
+        links: [
+          { label: t('nav.uploadImage'), ariaLabel: t('nav.uploadImage'), to: '/upload' },
+        ],
       },
     ],
-    [profileTo, savedTo],
+    [profileTo, savedTo, t],
   )
 
   return (

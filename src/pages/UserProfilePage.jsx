@@ -1,10 +1,18 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { api, ApiError, avatarUrl } from '../api'
 import { useAuth } from '../auth/AuthContext'
+import { Dialog } from '../components/Dialog'
 import Masonry from '../components/Masonry'
+import { ProfileSkeleton } from '../components/Skeletons'
 import { useFeed } from '../hooks/useFeed'
 import { imageToMasonryItem } from '../utils/masonry'
+import { readCached, writeCached } from '../utils/cache'
+
+const PROFILE_TTL_MS = 5 * 60 * 1000
+const profileCacheKey = (username) => `cdn_profile_${username}`
+const profileImagesCacheKey = (id) => `cdn_profile_images_${id}`
 
 function Avatar({ user }) {
   if (user.avatarUrl) {
@@ -20,10 +28,12 @@ function Avatar({ user }) {
 export function UserProfilePage() {
   const { username = '' } = useParams()
   const navigate = useNavigate()
+  const { t } = useTranslation()
   const [params, setParams] = useSearchParams()
   const { user: currentUser, updateUser } = useAuth()
   const { images: feedImages, users, savedIds, toggleSave, removeImage } = useFeed()
   const [user, setUser] = useState(null)
+  const [loadedUsername, setLoadedUsername] = useState(null)
   const [profileImages, setProfileImages] = useState([])
   const [error, setError] = useState(null)
 
@@ -42,25 +52,49 @@ export function UserProfilePage() {
   useEffect(() => {
     let active = true
     setError(null)
-    setUser(null)
     setEditing(false)
+    setLoadedUsername(null)
+    setProfileImages([])
+    setUser(null)
+
+    const cachedUser = readCached(profileCacheKey(username), PROFILE_TTL_MS)
+    if (cachedUser) {
+      setUser(cachedUser)
+      setLoadedUsername(username)
+      const cachedImages = readCached(
+        profileImagesCacheKey(cachedUser.id),
+        PROFILE_TTL_MS,
+      )
+      if (cachedImages) setProfileImages(cachedImages)
+    }
 
     void (async () => {
       try {
         const u = await api.getUserByUsername(username)
         if (!active) return
         setUser(u)
-        const imgs = await api.getImages(u.id)
-        if (active) setProfileImages(imgs)
+        setLoadedUsername(username)
+        writeCached(profileCacheKey(username), u)
+        try {
+          const imgs = await api.getImages(u.id)
+          if (!active) return
+          setProfileImages(imgs)
+          writeCached(profileImagesCacheKey(u.id), imgs)
+        } catch {
+          // sin imágenes en caché se mantiene vacío el feed del perfil
+        }
       } catch (err) {
-        if (active) setError(err instanceof Error ? err.message : 'Error al cargar el perfil')
+        if (active && !cachedUser) {
+          setError(err instanceof Error ? err.message : t('profile.loadError'))
+        }
       }
     })()
 
     return () => {
       active = false
     }
-  }, [username])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [username, t])
 
   const startEditing = () => {
     if (!user) return
@@ -96,7 +130,7 @@ export function UserProfilePage() {
       setEditing(false)
       if (next.username !== username) navigate(`/users/${next.username}`)
     } catch (err) {
-      setSaveError(err instanceof ApiError ? err.message : 'Error al guardar el perfil')
+      setSaveError(err instanceof ApiError ? err.message : t('profile.saveError'))
     } finally {
       setSaving(false)
     }
@@ -107,7 +141,7 @@ export function UserProfilePage() {
       await removeImage(id)
       setProfileImages((prev) => prev.filter((img) => img.id !== id))
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Error al borrar la imagen')
+      alert(err instanceof Error ? err.message : t('profile.deleteError'))
     }
   }
 
@@ -156,12 +190,8 @@ export function UserProfilePage() {
     )
   }
 
-  if (!user) {
-    return (
-      <main className="container">
-        <p>Cargando…</p>
-      </main>
-    )
+  if (!user || loadedUsername !== username) {
+    return <ProfileSkeleton />
   }
 
   return (
@@ -171,26 +201,25 @@ export function UserProfilePage() {
         <div>
           <h1>
             {user.nickname}
-            {user.role === 'admin' && <span className="role-badge">admin</span>}
+            {user.role === 'admin' && <span className="role-badge">{t('profile.admin')}</span>}
           </h1>
           <p className="muted">
-            @{user.username} · desde {new Date(user.createdAt).toLocaleDateString('es-AR')}
+            @{user.username} · {t('profile.since', { date: new Date(user.createdAt).toLocaleDateString() })}
           </p>
           {user.description && <p>{user.description}</p>}
-          {isOwnProfile && !editing && (
+          {isOwnProfile && (
             <button type="button" className="btn btn-secondary" onClick={startEditing}>
-              Editar perfil
+              {t('profile.editProfile')}
             </button>
           )}
         </div>
       </section>
 
-      {isOwnProfile && editing && (
-        <form className="form" onSubmit={handleSave} style={{ marginTop: '1rem' }}>
-          <h2>Editar perfil</h2>
+      <Dialog open={editing} onClose={() => setEditing(false)} title={t('profile.editProfile')}>
+        <form className="form" onSubmit={handleSave}>
           {saveError && <p className="error">{saveError}</p>}
           <label>
-            Nickname
+            {t('profile.nickname')}
             <input
               type="text"
               value={nickname}
@@ -199,7 +228,7 @@ export function UserProfilePage() {
             />
           </label>
           <label>
-            Username
+            {t('profile.username')}
             <input
               type="text"
               value={editUsername}
@@ -209,7 +238,7 @@ export function UserProfilePage() {
             />
           </label>
           <label>
-            Descripción
+            {t('profile.description')}
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
@@ -217,7 +246,7 @@ export function UserProfilePage() {
             />
           </label>
           <label>
-            Avatar
+            {t('profile.avatar')}
             <input
               type="file"
               accept="image/jpeg,image/png,image/gif,image/webp"
@@ -227,16 +256,16 @@ export function UserProfilePage() {
           </label>
           <div style={{ display: 'flex', gap: '0.5rem' }}>
             <button type="submit" className="btn btn-primary" disabled={saving}>
-              {saving ? 'Guardando…' : 'Guardar'}
+              {saving ? t('profile.saving') : t('common.save')}
             </button>
             <button type="button" className="btn btn-secondary" onClick={() => setEditing(false)}>
-              Cancelar
+              {t('common.cancel')}
             </button>
           </div>
         </form>
-      )}
+      </Dialog>
 
-      <div className="explore-tabs" role="tablist">
+      <div className="explore-tabs profile-tabs" role="tablist">
         <button
           type="button"
           role="tab"
@@ -244,7 +273,7 @@ export function UserProfilePage() {
           className={`btn ${tab === 'feed' ? 'btn-primary' : 'btn-secondary'}`}
           onClick={() => setTab('feed')}
         >
-          Feed
+          {t('profile.feedTab')}
         </button>
         {isOwnProfile && (
           <button
@@ -254,18 +283,17 @@ export function UserProfilePage() {
             className={`btn ${tab === 'saved' ? 'btn-primary' : 'btn-secondary'}`}
             onClick={() => setTab('saved')}
           >
-            Guardados
+            {t('profile.savedTab')}
           </button>
         )}
       </div>
 
       {tab === 'saved' ? (
         <section>
-          <h2>Guardados de {user.nickname}</h2>
+          <h2>{t('profile.savedOf', { nickname: user.nickname })}</h2>
           {savedItems.length === 0 ? (
             <p className="muted">
-              Todavía no guardaste ninguna imagen. Usá el menú de tres puntos en el feed para
-              guardarlas.
+              {t('profile.noSavedYet')} {t('profile.savedHint')}
             </p>
           ) : (
             <Masonry
@@ -277,9 +305,9 @@ export function UserProfilePage() {
         </section>
       ) : (
         <section>
-          <h2>Imágenes de {user.nickname}</h2>
+          <h2>{t('profile.imagesOf', { nickname: user.nickname })}</h2>
           {feedItems.length === 0 ? (
-            <p className="muted">No subió imágenes todavía.</p>
+            <p className="muted">{t('profile.noImagesYet')}</p>
           ) : (
             <Masonry
               items={feedItems}

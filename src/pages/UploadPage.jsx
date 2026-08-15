@@ -1,11 +1,14 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { api } from '../api'
+import { Dialog } from '../components/Dialog'
 import { ImageCard } from '../components/ImageCard'
 import { useFeed } from '../hooks/useFeed'
 
 export function UploadPage() {
   const navigate = useNavigate()
+  const { t } = useTranslation()
   const { images, savedIds, toggleSave } = useFeed()
   const recent = (images ?? []).slice(0, 8)
   const [file, setFile] = useState(null)
@@ -26,10 +29,12 @@ export function UploadPage() {
     if (f) setFile(f)
   }
 
+  const handleClose = () => navigate('/')
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (!file) {
-      setError('Elegí un archivo de imagen.')
+      setError(t('upload.chooseFile'))
       return
     }
     setError(null)
@@ -40,9 +45,9 @@ export function UploadPage() {
         name: name.trim() || undefined,
         description: description.trim() || undefined,
       })
-      navigate('/')
+      handleClose()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error al subir la imagen')
+      setError(err instanceof Error ? err.message : t('upload.submitError'))
     } finally {
       setBusy(false)
     }
@@ -58,53 +63,54 @@ export function UploadPage() {
 
   return (
     <main className="container upload-page">
-      <h1>Subir imagen</h1>
-      {error && <p className="error">{error}</p>}
-      <form className="upload-card" onSubmit={handleSubmit}>
-        <label
-          className={dropClasses}
-          onDragOver={(e) => {
-            e.preventDefault()
-            setDragging(true)
-          }}
-          onDragLeave={() => setDragging(false)}
-          onDrop={handleDrop}
-        >
-          <input
-            type="file"
-            accept="image/jpeg,image/png,image/gif,image/webp"
-            onChange={handleFileChange}
-            hidden
-          />
-          <span>
-            {file ? file.name : 'Hacé clic o arrastrá una imagen acá'}
-          </span>
-        </label>
+      <h1>{t('upload.title')}</h1>
 
-        <label>
-          Nombre (opcional)
-          <input
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Se usa el nombre del archivo si lo dejás vacío"
-          />
-        </label>
-        <label>
-          Descripción (opcional)
-          <textarea
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            rows={3}
-          />
-        </label>
-        <button type="submit" className="btn btn-primary btn-block" disabled={busy}>
-          {busy ? 'Subiendo…' : 'Subir'}
-        </button>
-      </form>
+      <Dialog open onClose={handleClose} title={t('upload.title')}>
+        <form className="form" onSubmit={handleSubmit}>
+          {error && <p className="error">{error}</p>}
+          <label
+            className={dropClasses}
+            onDragOver={(e) => {
+              e.preventDefault()
+              setDragging(true)
+            }}
+            onDragLeave={() => setDragging(false)}
+            onDrop={handleDrop}
+          >
+            <input
+              type="file"
+              accept="image/jpeg,image/png,image/gif,image/webp"
+              onChange={handleFileChange}
+              hidden
+            />
+            <span>{file ? file.name : t('upload.dragHint')}</span>
+          </label>
+
+          <label>
+            {t('upload.nameLabel')}
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder={t('upload.namePlaceholder')}
+            />
+          </label>
+          <label>
+            {t('upload.descriptionLabel')}
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              rows={3}
+            />
+          </label>
+          <button type="submit" className="btn btn-primary btn-block" disabled={busy}>
+            {busy ? t('upload.submitting') : t('upload.submit')}
+          </button>
+        </form>
+      </Dialog>
 
       <section className="carousel-section">
-        <h2>Recientes</h2>
+        <h2>{t('upload.recent')}</h2>
         {images === null ? (
           <div className="carousel" aria-hidden="true">
             {Array.from({ length: 4 }, (_, i) => (
@@ -112,7 +118,7 @@ export function UploadPage() {
             ))}
           </div>
         ) : recent.length === 0 ? (
-          <div className="carousel-empty">Todavía no hay imágenes.</div>
+          <div className="carousel-empty">{t('upload.noImages')}</div>
         ) : (
           <div className="carousel">
             {recent.map((img) => (

@@ -1,12 +1,15 @@
 import { useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
 import Masonry from '../components/Masonry'
+import { MasonrySkeleton } from '../components/Skeletons'
 import { useFeed } from '../hooks/useFeed'
 import { imageToMasonryItem } from '../utils/masonry'
 
 export function HomePage() {
   const { user } = useAuth()
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const { images, users, loading, error, removeImage, savedIds, toggleSave } = useFeed()
 
@@ -14,7 +17,7 @@ export function HomePage() {
     try {
       await removeImage(id)
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Error al borrar la imagen')
+      alert(err instanceof Error ? err.message : t('feed.deleteError'))
     }
   }
 
@@ -38,14 +41,13 @@ export function HomePage() {
 
   return (
     <main className="container">
-      <h1>Feed</h1>
+      <h1>{t('home.title')}</h1>
       {error && <p className="error">{error}</p>}
       {loading ? (
-        <p>Cargando…</p>
+        <MasonrySkeleton count={12} />
       ) : items.length === 0 ? (
         <p className="muted">
-          No hay imágenes todavía.{' '}
-          {user ? '¡Subí la primera desde el menú!' : 'Registrate para subir la primera.'}
+          {t('home.empty')} {user ? t('home.emptyLoggedIn') : t('home.emptyGuest')}
         </p>
       ) : (
         <Masonry

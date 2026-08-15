@@ -1,8 +1,10 @@
 import { useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { avatarUrl } from '../api'
 import { useAuth } from '../auth/AuthContext'
 import Masonry from '../components/Masonry'
+import { MasonrySkeleton } from '../components/Skeletons'
 import { useFeed } from '../hooks/useFeed'
 import { imageToMasonryItem } from '../utils/masonry'
 
@@ -19,6 +21,7 @@ function Avatar({ user, size = 'avatar' }) {
 
 export function ExplorePage() {
   const { user } = useAuth()
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const { images, users, loading, savedIds, toggleSave, removeImage } = useFeed()
   const [params, setParams] = useSearchParams()
@@ -54,7 +57,7 @@ export function ExplorePage() {
     try {
       await removeImage(id)
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Error al borrar la imagen')
+      alert(err instanceof Error ? err.message : t('feed.deleteError'))
     }
   }
 
@@ -73,7 +76,7 @@ export function ExplorePage() {
 
   return (
     <main className="container">
-      <h1>Explorar</h1>
+      <h1>{t('explore.title')}</h1>
 
       <div className="explore-tabs" role="tablist">
         <button
@@ -83,7 +86,7 @@ export function ExplorePage() {
           className={`btn ${tab === 'images' ? 'btn-primary' : 'btn-secondary'}`}
           onClick={() => setTab('images')}
         >
-          Imágenes
+          {t('explore.tabImages')}
         </button>
         <button
           type="button"
@@ -92,17 +95,21 @@ export function ExplorePage() {
           className={`btn ${tab === 'users' ? 'btn-primary' : 'btn-secondary'}`}
           onClick={() => setTab('users')}
         >
-          Usuarios
+          {t('explore.tabUsers')}
         </button>
       </div>
 
       {tab === 'users' ? (
         <section>
-          <h2>Usuarios</h2>
+          <h2>{t('explore.usersTitle')}</h2>
           {loading ? (
-            <p>Cargando…</p>
+            <div className="user-list" aria-hidden="true">
+              {Array.from({ length: 6 }, (_, i) => (
+                <div key={i} className="skeleton-line" style={{ width: 180, borderRadius: 999 }} />
+              ))}
+            </div>
           ) : (users ?? []).length === 0 ? (
-            <p className="muted">No hay usuarios registrados.</p>
+            <p className="muted">{t('explore.noUsers')}</p>
           ) : (
             <ul className="user-list">
               {(users ?? []).map((u) => (
@@ -121,23 +128,23 @@ export function ExplorePage() {
       ) : (
         <section>
           <label className="explore-search">
-            Buscar imágenes por nombre, descripción o autor
+            {t('explore.searchLabel')}
             <input
               type="search"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Ej: playa, fotografía…"
+              placeholder={t('explore.searchPlaceholder')}
             />
           </label>
 
           {loading ? (
-            <p>Cargando…</p>
+            <MasonrySkeleton count={12} />
           ) : q ? (
             searchResults.length === 0 ? (
-              <p className="muted">No se encontraron resultados para “{query}”.</p>
+              <p className="muted">{t('explore.noResults', { query })}</p>
             ) : (
               <>
-                <h2>Resultados</h2>
+                <h2>{t('explore.results')}</h2>
                 <Masonry
                   items={items}
                   animateFrom="bottom"
@@ -147,9 +154,9 @@ export function ExplorePage() {
             )
           ) : (
             <>
-              <h2>Recomendaciones</h2>
+              <h2>{t('explore.recommendations')}</h2>
               {recommended.length === 0 ? (
-                <p className="muted">No hay imágenes todavía.</p>
+                <p className="muted">{t('explore.noImages')}</p>
               ) : (
                 <Masonry
                   items={items}
