@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { api } from '../api'
+import { api, getToken } from '../api'
 
 const CACHE_KEY = 'cdn_feed_cache'
 const POLL_INTERVAL_MS = 15_000
@@ -31,11 +31,30 @@ export function useFeed() {
   const [images, setImages] = useState(null)
   const [users, setUsers] = useState(null)
   const [error, setError] = useState(null)
+  const [savedIds, setSavedIds] = useState(() => new Set())
   const latest = useRef({ images: [], users: [] })
+  const latestSaved = useRef(new Set())
 
   useEffect(() => {
     latest.current = { images: images ?? [], users: users ?? [] }
   }, [images, users])
+
+  useEffect(() => {
+    latestSaved.current = savedIds
+  }, [savedIds])
+
+  const loadSaved = useCallback(async () => {
+    if (!getToken()) {
+      setSavedIds(new Set())
+      return
+    }
+    try {
+      const imgs = await api.getSavedImages()
+      setSavedIds(new Set(imgs.map((i) => i.id)))
+    } catch {
+      // los guardados no bloquean el feed principal
+    }
+  }, [])
 
   const refresh = useCallback(async () => {
     try {
@@ -57,6 +76,7 @@ export function useFeed() {
     }
 
     void refresh()
+    void loadSaved()
 
     const poll = setInterval(() => void refresh(), POLL_INTERVAL_MS)
     const onVisible = () => {
@@ -68,7 +88,30 @@ export function useFeed() {
       clearInterval(poll)
       document.removeEventListener('visibilitychange', onVisible)
     }
-  }, [refresh])
+  }, [refresh, loadSaved])
+
+  const toggleSave = useCallback(async (imageId) => {
+    const isSaved = latestSaved.current.has(imageId)
+    try {
+      if (isSaved) {
+        await api.unsaveImage(imageId)
+        setSavedIds((prev) => {
+          const next = new Set(prev)
+          next.delete(imageId)
+          return next
+        })
+      } else {
+        await api.saveImage(imageId)
+        setSavedIds((prev) => {
+          const next = new Set(prev)
+          next.add(imageId)
+          return next
+        })
+      }
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Error al guardar la imagen')
+    }
+  }, [])
 
   const removeImage = useCallback(async (id) => {
     try {
@@ -78,6 +121,11 @@ export function useFeed() {
         writeCache(next, latest.current.users)
         return next
       })
+      setSavedIds((prev) => {
+        const next = new Set(prev)
+        next.delete(id)
+        return next
+      })
     } catch (err) {
       throw err instanceof Error ? err : new Error('Error al borrar la imagen')
     }
@@ -85,5 +133,5 @@ export function useFeed() {
 
   const loading = images === null
 
-  return { images, users, loading, error, refresh, removeImage }
+  return { images, users, loading, error, refresh, removeImage, savedIds, toggleSave }
 }

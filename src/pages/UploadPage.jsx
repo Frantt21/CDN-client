@@ -6,7 +6,7 @@ import { useFeed } from '../hooks/useFeed'
 
 export function UploadPage() {
   const navigate = useNavigate()
-  const { images } = useFeed()
+  const { images, savedIds, toggleSave } = useFeed()
   const recent = (images ?? []).slice(0, 8)
   const [file, setFile] = useState(null)
   const [name, setName] = useState('')
@@ -40,7 +40,7 @@ export function UploadPage() {
         name: name.trim() || undefined,
         description: description.trim() || undefined,
       })
-      navigate('/feed')
+      navigate('/')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error al subir la imagen')
     } finally {
@@ -116,7 +116,12 @@ export function UploadPage() {
         ) : (
           <div className="carousel">
             {recent.map((img) => (
-              <ImageCard key={img.id} image={img} />
+              <ImageCard
+                key={img.id}
+                image={img}
+                saved={savedIds.has(img.id)}
+                onToggleSave={toggleSave}
+              />
             ))}
           </div>
         )}

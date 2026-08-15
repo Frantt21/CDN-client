@@ -1,6 +1,6 @@
-import { BrowserRouter, Route, Routes } from 'react-router-dom'
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { AuthProvider } from './auth/AuthContext'
-import { NavBar } from './components/NavBar'
+import CardNav from './components/CardNav'
 import { ProtectedRoute } from './components/ProtectedRoute'
 import { HomePage } from './pages/HomePage'
 import { LoginPage } from './pages/LoginPage'
@@ -8,41 +8,50 @@ import { RegisterPage } from './pages/RegisterPage'
 import { UploadPage } from './pages/UploadPage'
 import { UserProfilePage } from './pages/UserProfilePage'
 import { SettingsPage } from './pages/SettingsPage'
-import { FeedPage } from './pages/FeedPage'
-import GradientWaves from './components/GradientWaves/GradientWaves'
+import { ExplorePage } from './pages/ExplorePage'
+
+const navItems = [
+  {
+    label: 'Inicio',
+    bgColor: '#21161A',
+    textColor: '#F2F4F3',
+    links: [{ label: 'Feed', ariaLabel: 'Ver el feed', to: '/' }],
+  },
+  {
+    label: 'Subir',
+    bgColor: '#49111C',
+    textColor: '#F2F4F3',
+    links: [{ label: 'Subir imagen', ariaLabel: 'Subir una imagen', to: '/upload' }],
+  },
+  {
+    label: 'Explorar',
+    bgColor: '#21161A',
+    textColor: '#F2F4F3',
+    links: [
+      { label: 'Buscar', ariaLabel: 'Buscar imágenes', to: '/explore' },
+      { label: 'Guardados', ariaLabel: 'Imágenes guardadas', to: '/explore?tab=saved' },
+    ],
+  },
+]
 
 function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <div className="gradient-waves-bg">
-          <GradientWaves
-            horizonColor="#0A0908"
-            waveColor="#49111C"
-            crestColor="#F2F4F3"
-            speed={0.4}
-            amplitude={2.5}
-            waveScale={0.6}
-            waveRatio={0.9}
-            swell={35}
-            turbulence={20}
-            tilt={1.11}
-            zoom={1.0}
-            height={5.5}
-            fogDepth={15}
-            detail="medium"
-            brightness={1.0}
-            opacity={1.0}
-            mouseInteraction={true}
-            parallaxStrength={0.5}
-            grain={true}
-            grainIntensity={0.05}
-          />
-        </div>
-        <NavBar />
+        <CardNav
+          items={navItems}
+          brandText="CDN-backend"
+          baseColor="#151013"
+          menuColor="#F2F4F3"
+          buttonBgColor="#49111C"
+          buttonTextColor="#F2F4F3"
+          ctaLabel="Subir"
+          ctaTo="/upload"
+        />
         <Routes>
           <Route path="/" element={<HomePage />} />
-          <Route path="/feed" element={<FeedPage />} />
+          <Route path="/feed" element={<Navigate to="/" replace />} />
+          <Route path="/explore" element={<ExplorePage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/users/:username" element={<UserProfilePage />} />

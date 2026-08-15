@@ -99,4 +99,10 @@ export const api = {
 
   deleteImage: (id) =>
     request(`/images/${id}`, { method: 'DELETE' }, true),
+
+  getSavedImages: () => request('/saved', {}, true),
+
+  saveImage: (id) => request(`/saved/${id}`, { method: 'POST' }, true),
+
+  unsaveImage: (id) => request(`/saved/${id}`, { method: 'DELETE' }, true),
 }

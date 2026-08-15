@@ -1,43 +1,74 @@
 import { Link } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
+import { ImageCard } from '../components/ImageCard'
+import { useFeed } from '../hooks/useFeed'
 
 export function HomePage() {
   const { user } = useAuth()
+  const { images, users, loading, error, removeImage, savedIds, toggleSave } = useFeed()
+
+  const handleDelete = async (id) => {
+    try {
+      await removeImage(id)
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Error al borrar la imagen')
+    }
+  }
+
+  const ownerNames = new Map((users ?? []).map((u) => [u.id, u.nickname]))
 
   return (
-    <main className="container landing">
-      <section className="landing-hero">
-        <h1>CDN-backend</h1>
-        <p>
-          Compartí imágenes con la comunidad: subí tus fotos, explorá el feed
-          público y visitá los perfiles de otros usuarios.
-        </p>
-        <div className="landing-cta">
-          <Link to="/feed" className="btn btn-primary">
-            Explorar el feed
-          </Link>
-          {!user && (
-            <Link to="/register" className="btn btn-secondary">
-              Crear cuenta
-            </Link>
-          )}
-        </div>
-      </section>
+    <main className="container">
+      <h1>Feed</h1>
+      {error && <p className="error">{error}</p>}
+      {loading ? (
+        <p>Cargando…</p>
+      ) : (
+        <>
+          <section>
+            <h2>Imágenes</h2>
+            {images.length === 0 ? (
+              <p className="muted">
+                No hay imágenes todavía.{' '}
+                {user ? '¡Subí la primera desde el menú!' : 'Registrate para subir la primera.'}
+              </p>
+            ) : (
+              <div className="grid">
+                {images.map((img) => (
+                  <ImageCard
+                    key={img.id}
+                    image={img}
+                    ownerName={ownerNames.get(img.userId)}
+                    saved={savedIds.has(img.id)}
+                    onToggleSave={user ? toggleSave : undefined}
+                    onDelete={user ? handleDelete : undefined}
+                  />
+                ))}
+              </div>
+            )}
+          </section>
 
-      <section className="landing-features">
-        <div className="feature-card">
-          <h3>Subí imágenes</h3>
-          <p>Arrastrá o seleccioná un archivo y publicalo al instante.</p>
-        </div>
-        <div className="feature-card">
-          <h3>Galería pública</h3>
-          <p>Explorá las imágenes subidas por toda la comunidad.</p>
-        </div>
-        <div className="feature-card">
-          <h3>Tu perfil</h3>
-          <p>Personalizá tu nickname, username y descripción.</p>
-        </div>
-      </section>
+          <section>
+            <h2>Usuarios</h2>
+            {users.length === 0 ? (
+              <p className="muted">No hay usuarios registrados.</p>
+            ) : (
+              <ul className="user-list">
+                {users.map((u) => (
+                  <li key={u.id}>
+                    <Link to={`/users/${u.username}`} className="user-chip">
+                      <span className="avatar">{u.nickname[0]?.toUpperCase()}</span>
+                      <span>
+                        <strong>{u.nickname}</strong> <small>@{u.username}</small>
+                      </span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+        </>
+      )}
     </main>
   )
 }
