@@ -1,12 +1,15 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { api, imageDownloadUrl, imageUrl } from '../api'
 import { useAuth } from '../auth/AuthContext'
 import Masonry from '../components/Masonry'
 import { DetailSkeleton } from '../components/Skeletons'
 import { useFeed } from '../hooks/useFeed'
+import { imageCacheKey, readCached, writeCached } from '../utils/cache'
 import { imageToMasonryItem } from '../utils/masonry'
+
+const IMAGE_TTL_MS = 5 * 60 * 1000
 
 function BookmarkIcon() {
   return (
@@ -124,14 +127,17 @@ function TrashIcon() {
   )
 }
 
-export function ImageDetailPage() {
-  const { id } = useParams()
+export function ImageDetailPage({ id }) {
   const navigate = useNavigate()
   const { t } = useTranslation()
   const { user } = useAuth()
   const { images, users, savedIds, toggleSave, removeImage } = useFeed()
-  const [image, setImage] = useState(null)
-  const [loading, setLoading] = useState(true)
+
+  // Lazy-init desde la caché: al volver a una imagen ya vista se muestra al
+  // instante y el fetch fresco se hace en segundo plano (stale-while-revalidate).
+  // La ruta usa key={id}, así el estado arranca cacheado por imagen.
+  const [image, setImage] = useState(() => readCached(imageCacheKey(id), IMAGE_TTL_MS))
+  const [loading, setLoading] = useState(() => !readCached(imageCacheKey(id), IMAGE_TTL_MS))
   const [error, setError] = useState(null)
   const [deleting, setDeleting] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
@@ -139,19 +145,21 @@ export function ImageDetailPage() {
 
   useEffect(() => {
     let active = true
-    setLoading(true)
     setError(null)
-    setImage(null)
+    const hadCache = Boolean(readCached(imageCacheKey(id), IMAGE_TTL_MS))
     api
       .getImage(id)
       .then((img) => {
-        if (active) setImage(img)
+        if (!active) return
+        setImage(img)
+        setLoading(false)
+        writeCached(imageCacheKey(id), img)
       })
       .catch((err) => {
-        if (active) setError(err instanceof Error ? err.message : t('detail.loadError'))
-      })
-      .finally(() => {
-        if (active) setLoading(false)
+        if (!active) return
+        // Si ya mostramos la imagen cacheada, no romper con un error de refresco.
+        if (!hadCache) setError(err instanceof Error ? err.message : t('detail.loadError'))
+        setLoading(false)
       })
     return () => {
       active = false
@@ -261,7 +269,7 @@ export function ImageDetailPage() {
     window.setTimeout(() => setCopied(false), 2000)
   }
 
-  if (loading) {
+  if (loading && !image) {
     return <DetailSkeleton />
   }
 

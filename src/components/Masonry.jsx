@@ -1,68 +1,26 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { useTranslation } from 'react-i18next';
-import './Masonry.css';
+import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import './Masonry.css'
 
+/** Cantidad de columnas según el ancho de pantalla (matchMedia nativo). */
 const useMedia = (queries, values, defaultValue) => {
   const get = () => {
-    if (typeof window === 'undefined') return defaultValue;
-    return values[queries.findIndex((q) => matchMedia(q).matches)] ?? defaultValue;
-  };
+    if (typeof window === 'undefined') return defaultValue
+    return values[queries.findIndex((q) => matchMedia(q).matches)] ?? defaultValue
+  }
 
-  const [value, setValue] = useState(get);
+  const [value, setValue] = useState(get)
 
   useEffect(() => {
-    const handler = () => setValue(get);
-    queries.forEach((q) => matchMedia(q).addEventListener('change', handler));
+    const handler = () => setValue(get)
+    queries.forEach((q) => matchMedia(q).addEventListener('change', handler))
     return () =>
-      queries.forEach((q) => matchMedia(q).removeEventListener('change', handler));
+      queries.forEach((q) => matchMedia(q).removeEventListener('change', handler))
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [queries]);
+  }, [queries])
 
-  return value;
-};
-
-const useMeasure = () => {
-  const ref = useRef(null);
-  const [width, setWidth] = useState(0);
-
-  useLayoutEffect(() => {
-    if (!ref.current) return;
-    const ro = new ResizeObserver(([entry]) => {
-      setWidth(entry.contentRect.width);
-    });
-    ro.observe(ref.current);
-    return () => ro.disconnect();
-  }, []);
-
-  return [ref, width];
-};
-
-/** Ventana de scroll del documento (throttled con rAF). */
-const useViewport = () => {
-  const [viewport, setViewport] = useState({ top: 0, height: 0 });
-
-  useEffect(() => {
-    let ticking = false;
-    const update = () => {
-      if (ticking) return;
-      ticking = true;
-      requestAnimationFrame(() => {
-        setViewport({ top: window.scrollY, height: window.innerHeight });
-        ticking = false;
-      });
-    };
-
-    update();
-    window.addEventListener('scroll', update, { passive: true });
-    window.addEventListener('resize', update);
-    return () => {
-      window.removeEventListener('scroll', update);
-      window.removeEventListener('resize', update);
-    };
-  }, []);
-
-  return viewport;
-};
+  return value
+}
 
 function ThreeDotsIcon() {
   return (
@@ -77,7 +35,7 @@ function ThreeDotsIcon() {
       <circle cx="12" cy="12" r="1.7" />
       <circle cx="12" cy="19" r="1.7" />
     </svg>
-  );
+  )
 }
 
 function BookmarkIcon() {
@@ -95,7 +53,7 @@ function BookmarkIcon() {
     >
       <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
     </svg>
-  );
+  )
 }
 
 function TrashIcon() {
@@ -117,89 +75,60 @@ function TrashIcon() {
       <path d="M10 11v6" />
       <path d="M14 11v6" />
     </svg>
-  );
+  )
 }
 
-const OVERSCAN = 480;
-
+/**
+ * Masonry 100% nativo con CSS Grid: sin mediciones JS (ResizeObserver),
+ * sin virtualización por scroll ni posicionamiento absoluto.
+ *
+ * El grid usa filas de 1px (`grid-auto-rows: 1px`) y cada card ocupa
+ * `span` filas según su altura pseudo-determinística (estable entre
+ * renders), así el layout no depende del ancho medido del contenedor y
+ * las cards nunca "desaparecen" al alternar tabs o re-renderizar.
+ */
 const Masonry = ({ items, scaleOnHover = true, hoverScale = 0.95, onItemClick }) => {
-  const { t } = useTranslation();
+  const { t } = useTranslation()
   const columns = useMedia(
     ['(min-width:1500px)', '(min-width:1000px)', '(min-width:600px)', '(min-width:400px)'],
     [5, 4, 3, 2],
     1,
-  );
-
-  const [containerRef, width] = useMeasure();
-  const viewport = useViewport();
-  const [openMenuId, setOpenMenuId] = useState(null);
+  )
+  const [openMenuId, setOpenMenuId] = useState(null)
 
   useEffect(() => {
-    setOpenMenuId(null);
-  }, [items]);
+    setOpenMenuId(null)
+  }, [items])
 
   useEffect(() => {
-    if (openMenuId === null) return;
+    if (openMenuId === null) return
     const handler = (e) => {
-      if (!e.target.closest('[data-menu]')) setOpenMenuId(null);
-    };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, [openMenuId]);
-
-  const grid = useMemo(() => {
-    if (!width) return [];
-
-    const colHeights = new Array(columns).fill(0);
-    const columnWidth = width / columns;
-
-    return items.map((child) => {
-      const col = colHeights.indexOf(Math.min(...colHeights));
-      const x = columnWidth * col;
-      const height = child.height / 2;
-      const y = colHeights[col];
-
-      colHeights[col] += height;
-
-      return { ...child, x, y, w: columnWidth, h: height };
-    });
-  }, [columns, items, width]);
-
-  const gridHeight = useMemo(
-    () => grid.reduce((max, g) => Math.max(max, g.y + g.h), 0),
-    [grid],
-  );
-
-  // Solo se montan los items dentro de la ventana de scroll (+ overscan).
-  const visible = useMemo(() => {
-    if (viewport.height === 0) return grid.slice(0, 24);
-    const from = viewport.top - OVERSCAN;
-    const to = viewport.top + viewport.height + OVERSCAN;
-    return grid.filter((it) => it.y + it.h > from && it.y < to);
-  }, [grid, viewport]);
+      if (!e.target.closest('[data-menu]')) setOpenMenuId(null)
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [openMenuId])
 
   const toggleMenu = (id) => {
-    setOpenMenuId((prev) => (prev === id ? null : id));
-  };
+    setOpenMenuId((prev) => (prev === id ? null : id))
+  }
 
   return (
-    <div ref={containerRef} className="masonry-list" style={{ height: gridHeight }}>
-      {visible.map((item) => {
-        const hasActions = Boolean(item.onToggleSave) || Boolean(item.canDelete && item.onDelete);
+    <div className="masonry-list" style={{ '--masonry-cols': columns }}>
+      {items.map((item) => {
+        const span = Math.max(1, Math.round((item.height ?? 300) / 2))
+        const hasActions = Boolean(item.onToggleSave) || Boolean(item.canDelete && item.onDelete)
 
         return (
           <div
             key={item.id}
             className="item-wrapper"
             style={{
-              left: item.x,
-              top: item.y,
-              width: item.w,
-              height: item.h,
               '--hover-scale': scaleOnHover ? hoverScale : 1,
+              gridRowEnd: `span ${span}`,
             }}
             onClick={() => {
-              if (onItemClick) onItemClick(item);
+              if (onItemClick) onItemClick(item)
             }}
           >
             <div className="item-img" style={{ backgroundImage: `url(${item.img})` }}>
@@ -220,8 +149,8 @@ const Masonry = ({ items, scaleOnHover = true, hoverScale = 0.95, onItemClick })
                       aria-label={t('masonry.moreOptions')}
                       aria-expanded={openMenuId === item.id}
                       onClick={(e) => {
-                        e.stopPropagation();
-                        toggleMenu(item.id);
+                        e.stopPropagation()
+                        toggleMenu(item.id)
                       }}
                     >
                       <ThreeDotsIcon />
@@ -234,9 +163,9 @@ const Masonry = ({ items, scaleOnHover = true, hoverScale = 0.95, onItemClick })
                             type="button"
                             className={item.saved ? 'active' : ''}
                             onClick={(e) => {
-                              e.stopPropagation();
-                              setOpenMenuId(null);
-                              item.onToggleSave(item.id);
+                              e.stopPropagation()
+                              setOpenMenuId(null)
+                              item.onToggleSave(item.id)
                             }}
                           >
                             <BookmarkIcon />
@@ -248,9 +177,9 @@ const Masonry = ({ items, scaleOnHover = true, hoverScale = 0.95, onItemClick })
                             type="button"
                             className="danger"
                             onClick={(e) => {
-                              e.stopPropagation();
-                              setOpenMenuId(null);
-                              item.onDelete(item.id);
+                              e.stopPropagation()
+                              setOpenMenuId(null)
+                              item.onDelete(item.id)
                             }}
                           >
                             <TrashIcon />
@@ -264,10 +193,10 @@ const Masonry = ({ items, scaleOnHover = true, hoverScale = 0.95, onItemClick })
               </div>
             </div>
           </div>
-        );
+        )
       })}
     </div>
-  );
-};
+  )
+}
 
-export default Masonry;
+export default Masonry

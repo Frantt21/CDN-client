@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
+import { BrowserRouter, Navigate, Route, Routes, useParams } from 'react-router-dom'
 import { AuthProvider, useAuth } from './auth/AuthContext'
 import CardNav from './components/CardNav'
 import { ProtectedRoute } from './components/ProtectedRoute'
@@ -21,6 +21,18 @@ function App() {
       </AuthProvider>
     </BrowserRouter>
   )
+}
+
+// Re-monta la página por username/id: el lazy-init de caché arranca con los
+// datos de la ruta correspondiente (sin mostrar skeleton ni estado viejo).
+function ProfileRoute() {
+  const { username } = useParams()
+  return <UserProfilePage key={username} />
+}
+
+function ImageDetailRoute() {
+  const { id } = useParams()
+  return <ImageDetailPage key={id} id={id} />
 }
 
 function AppContent() {
@@ -81,8 +93,8 @@ function AppContent() {
         <Route path="/explore" element={<ExplorePage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
-        <Route path="/users/:username" element={<UserProfilePage />} />
-        <Route path="/images/:id" element={<ImageDetailPage />} />
+        <Route path="/users/:username" element={<ProfileRoute />} />
+        <Route path="/images/:id" element={<ImageDetailRoute />} />
         <Route
           path="/settings"
           element={

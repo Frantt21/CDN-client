@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { api, getStoredUser, getToken } from '../api'
 import i18n from '../i18n'
-import { readCached, writeCached } from '../utils/cache'
+import { ensureConnected, onRealtime } from '../realtime/client'
+import { imageCacheKey, readCached, writeCached } from '../utils/cache'
 
 const CACHE_KEY = 'cdn_feed_cache'
 const POLL_INTERVAL_MS = 15_000
@@ -46,8 +47,10 @@ function writeCache(images, users) {
 }
 
 export function useFeed() {
-  const [images, setImages] = useState(null)
-  const [users, setUsers] = useState(null)
+  // Lazy-init desde la caché: si ya navegamos antes, el feed aparece al
+  // instante y el fetch fresco se hace en segundo plano (stale-while-revalidate).
+  const [images, setImages] = useState(() => readCache()?.images ?? null)
+  const [users, setUsers] = useState(() => readCache()?.users ?? null)
   const [error, setError] = useState(null)
   const [savedIds, setSavedIds] = useState(() => {
     if (!getToken()) return new Set()
@@ -99,12 +102,6 @@ export function useFeed() {
   }, [])
 
   useEffect(() => {
-    const cached = readCache()
-    if (cached) {
-      setImages(cached.images)
-      setUsers(cached.users)
-    }
-
     void refresh()
     void loadSaved()
 
@@ -143,9 +140,47 @@ export function useFeed() {
     }
   }, [])
 
+  // Tiempo real: al recibir eventos del servidor se refresca el feed (con un
+  // pequeño debounce para agrupar ráfagas). El polling de 15s queda como respaldo.
+  const refreshTimer = useRef(null)
+
+  useEffect(() => {
+    void ensureConnected()
+
+    const debouncedRefresh = () => {
+      if (refreshTimer.current) clearTimeout(refreshTimer.current)
+      refreshTimer.current = setTimeout(() => void refresh(), 400)
+    }
+
+    const offUploaded = onRealtime('image:uploaded', debouncedRefresh)
+    const offDeleted = onRealtime('image:deleted', (id) => {
+      // Invalida el detalle de la imagen borrada para que no se muestre cacheado.
+      try {
+        localStorage.removeItem(imageCacheKey(id))
+      } catch {
+        // almacenamiento no disponible: se ignora
+      }
+      debouncedRefresh()
+    })
+    const offUserUpdated = onRealtime('user:updated', debouncedRefresh)
+
+    return () => {
+      offUploaded()
+      offDeleted()
+      offUserUpdated()
+      if (refreshTimer.current) clearTimeout(refreshTimer.current)
+    }
+  }, [refresh])
+
   const removeImage = useCallback(async (id) => {
     try {
       await api.deleteImage(id)
+      // Invalida el detalle cacheado para que no reaparezca al navegar.
+      try {
+        localStorage.removeItem(imageCacheKey(id))
+      } catch {
+        // almacenamiento no disponible: se ignora
+      }
       setImages((prev) => {
         const next = (prev ?? []).filter((img) => img.id !== id)
         writeCache(next, latest.current.users)

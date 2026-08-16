@@ -1,10 +1,14 @@
 .masonry-list {
-  position: relative;
+  display: grid;
+  grid-template-columns: repeat(var(--masonry-cols, 3), 1fr);
+  /* Filas de 1px: cada card ocupa `span` filas según su altura en px,
+     así el layout es estable sin medir el contenedor por JS. */
+  grid-auto-rows: 1px;
   width: 100%;
 }
 
 .item-wrapper {
-  position: absolute;
+  position: relative;
   padding: 6px;
   cursor: pointer;
   will-change: transform, opacity;

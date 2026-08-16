@@ -322,9 +322,9 @@ select:focus {
 }
 
 .avatar-lg {
-  width: 64px;
-  height: 64px;
-  font-size: 1.6rem;
+  width: 96px;
+  height: 96px;
+  font-size: 2.2rem;
 }
 
 .avatar-img {
@@ -714,4 +714,141 @@ select:focus {
   background: transparent;
   box-shadow: none;
   padding: 0;
+}
+
+/* ===== Perfil: stats ===== */
+.profile-stats {
+  display: flex;
+  gap: 0.5rem;
+  margin: 0.6rem 0 0.85rem;
+}
+
+.profile-stats .stat {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-glass-border);
+  border-radius: 999px;
+  padding: 0.3rem 0.8rem;
+}
+
+.profile-stats .stat svg {
+  color: var(--wine-tint);
+}
+
+/* ===== Selector de avatar en el diálogo ===== */
+.avatar-picker {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.avatar-picker-btn {
+  position: relative;
+  width: 96px;
+  height: 96px;
+  padding: 0;
+  border: 2px solid var(--color-glass-border);
+  border-radius: 50%;
+  background: var(--color-surface-raised);
+  overflow: hidden;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.avatar-picker-btn:hover,
+.avatar-picker-btn:focus-visible {
+  border-color: var(--wine-tint);
+  box-shadow: 0 0 0 3px rgba(220, 166, 176, 0.25);
+}
+
+.avatar-picker-btn img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.avatar-picker-initial {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.4rem;
+  font-weight: 700;
+  color: var(--color-accent-contrast);
+  background: var(--color-accent);
+}
+
+.avatar-picker-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(10, 9, 8, 0.5);
+  color: var(--color-text);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.avatar-picker-btn:hover .avatar-picker-overlay,
+.avatar-picker-btn:focus-visible .avatar-picker-overlay {
+  opacity: 1;
+}
+
+@media (hover: none) {
+  .avatar-picker-overlay {
+    opacity: 1;
+  }
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ===== Disponibilidad del username ===== */
+.username-status {
+  display: block;
+  font-size: 0.8rem;
+  margin-top: 0.25rem;
+}
+
+.username-status.idle {
+  display: none;
+}
+
+.username-status.checking {
+  color: var(--color-text-muted);
+}
+
+.username-status.available {
+  color: #7bc98a;
+}
+
+.username-status.taken,
+.username-status.invalid {
+  color: var(--color-danger);
+}
+
+/* Los tableros ocultos (tabs feed/saved) no ocupan espacio ni se re-montan */
+[hidden] {
+  display: none !important;
 }

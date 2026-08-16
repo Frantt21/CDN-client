@@ -1,3 +1,6 @@
+/** Clave de caché del detalle de una imagen (para invalidarla con realtime). */
+export const imageCacheKey = (id) => `cdn_image_${id}`
+
 /** Lee una entrada de caché de localStorage si no expiró. */
 export function readCached(key, ttlMs) {
   try {

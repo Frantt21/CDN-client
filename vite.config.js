@@ -17,6 +17,13 @@ export default defineConfig({
         // El certificado de desarrollo es autofirmado
         secure: false,
       },
+      // SignalR: requiere upgrade a WebSocket (ws: true)
+      '/hubs': {
+        target: apiTarget,
+        changeOrigin: true,
+        ws: true,
+        secure: false,
+      },
     },
   },
 })

@@ -163,6 +163,12 @@ export const api = {
 
   getUserByUsername: (username) => request(`/users/${username}`),
 
+  checkUsername: (username, excludeId) => {
+    const q = new URLSearchParams({ username })
+    if (excludeId) q.set('excludeId', excludeId)
+    return request(`/users/check-username?${q}`)
+  },
+
   updateProfile: (id, data) =>
     request(`/users/${id}`, { method: 'PUT', body: JSON.stringify(data) }, true),
 
