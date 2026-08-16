@@ -44,9 +44,14 @@ export function setStoredUser(user) {
   else localStorage.removeItem(USER_KEY)
 }
 
-/** URL del archivo de una imagen (vista inline). */
+/** URL del archivo de una imagen (vista inline, resolución completa). */
 export function imageUrl(id) {
   return `${API_BASE}/images/${id}/download`
+}
+
+/** URL de la miniatura de una imagen (para grids y cards). */
+export function imageThumbUrl(id) {
+  return `${API_BASE}/images/${id}/thumbnail`
 }
 
 /** URL del avatar de un usuario. */

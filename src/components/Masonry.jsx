@@ -131,7 +131,14 @@ const Masonry = ({ items, scaleOnHover = true, hoverScale = 0.95, onItemClick })
               if (onItemClick) onItemClick(item)
             }}
           >
-            <div className="item-img" style={{ backgroundImage: `url(${item.img})` }}>
+            <div className="item-img">
+              <img
+                className="item-image"
+                src={item.img}
+                alt={item.title}
+                loading="lazy"
+                decoding="async"
+              />
               <div className="item-overlay">
                 <div className="item-caption">
                   <strong className="item-title">{item.title}</strong>

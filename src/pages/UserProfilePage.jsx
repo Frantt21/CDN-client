@@ -5,7 +5,7 @@ import { api, ApiError, avatarUrl } from '../api'
 import { useAuth } from '../auth/AuthContext'
 import { Dialog } from '../components/Dialog'
 import Masonry from '../components/Masonry'
-import { ProfileSkeleton } from '../components/Skeletons'
+import { MasonrySkeleton, ProfileSkeleton } from '../components/Skeletons'
 import { UserAvatar } from '../components/UserAvatar'
 import { useFeed } from '../hooks/useFeed'
 import { ensureConnected, onRealtime } from '../realtime/client'
@@ -73,6 +73,12 @@ export function UserProfilePage() {
     return readCached(profileImagesCacheKey(cachedUser.id), PROFILE_TTL_MS) ?? []
   })
   const [error, setError] = useState(null)
+  // True mientras el feed del perfil no tiene datos (ni caché ni fetch resuelto):
+  // muestra skeleton en vez del mensaje "no subió imágenes" que parpadea.
+  const [feedLoading, setFeedLoading] = useState(() => {
+    const cachedUser = readCached(profileCacheKey(username), PROFILE_TTL_MS)
+    return !(cachedUser && readCached(profileImagesCacheKey(cachedUser.id), PROFILE_TTL_MS))
+  })
 
   const [editing, setEditing] = useState(false)
   const [nickname, setNickname] = useState('')
@@ -104,9 +110,11 @@ export function UserProfilePage() {
           const imgs = await api.getImages(u.id)
           if (!active) return
           setProfileImages(imgs)
+          setFeedLoading(false)
           writeCached(profileImagesCacheKey(u.id), imgs)
         } catch {
           // sin imágenes frescas: se mantiene lo cacheado
+          if (active) setFeedLoading(false)
         }
       } catch (err) {
         // Si ya mostramos algo cacheado, no romper con un error de refresco.
@@ -434,7 +442,9 @@ export function UserProfilePage() {
       */}
       <section hidden={isOwnProfile && tab !== 'feed'} aria-hidden={isOwnProfile && tab !== 'feed'}>
         <h2>{t('profile.imagesOf', { nickname: user.nickname })}</h2>
-        {feedItems.length === 0 ? (
+        {feedLoading ? (
+          <MasonrySkeleton count={8} />
+        ) : feedItems.length === 0 ? (
           <p className="muted">{t('profile.noImagesYet')}</p>
         ) : (
           <Masonry

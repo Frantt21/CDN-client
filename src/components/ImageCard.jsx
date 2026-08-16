@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { imageUrl } from '../api'
+import { imageThumbUrl, imageUrl } from '../api'
 import { useAuth } from '../auth/AuthContext'
 
 function BookmarkIcon() {
@@ -28,7 +28,7 @@ export function ImageCard({ image, ownerName, onDelete, saved = false, onToggleS
   return (
     <figure className="image-card">
       <a href={imageUrl(image.id)} target="_blank" rel="noreferrer">
-        <img src={imageUrl(image.id)} alt={image.name} loading="lazy" />
+        <img src={imageThumbUrl(image.id)} alt={image.name} loading="lazy" decoding="async" />
       </a>
       <figcaption>
         <strong>{image.name}</strong>
