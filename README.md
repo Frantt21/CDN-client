@@ -2,8 +2,6 @@
 
 Frontend en **React 19 + Vite + JavaScript + React Router** para la API de CDN-backend.
 
-> Vive en el repo pero está en `.gitignore` (no se trackea).
-
 ## Requisitos
 
 - Node 20+
@@ -89,7 +87,7 @@ src/
 ## Tiempo real (SignalR)
 
 - Se conecta al hub `/hubs/feed` (vía proxy con `ws: true`), con reconexión automática.
-- Al recibir `ImageUploaded`, `ImageDeleted` o `UserUpdated` refresca el feed con un debounce y **invalida la caché** de la imagen borrada.
+- Al recibir `ImageUploaded`, `ImageDeleted` o `UserUpdated` refresca el feed con un debounce e **invalida la caché** de la imagen borrada.
 - El perfil también se actualiza en vivo si el usuario visto cambia o le borran una imagen.
 - El polling de 15s queda como respaldo si la conexión se cae.
 
