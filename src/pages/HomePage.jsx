@@ -41,7 +41,6 @@ export function HomePage() {
 
   return (
     <main className="container">
-      <h1>{t('home.title')}</h1>
       {error && <p className="error">{error}</p>}
       {loading ? (
         <MasonrySkeleton count={12} />

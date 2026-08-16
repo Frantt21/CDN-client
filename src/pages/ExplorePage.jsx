@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
@@ -14,13 +14,21 @@ export function ExplorePage() {
   const navigate = useNavigate()
   const { images, users, loading, savedIds, toggleSave, removeImage } = useFeed()
   const [params, setParams] = useSearchParams()
-  const [query, setQuery] = useState('')
+  const [query, setQuery] = useState(() => params.get('q') ?? '')
+
+  // Sincroniza el input con ?q= de la URL (la búsqueda del sidebar redirige acá).
+  useEffect(() => {
+    const qParam = params.get('q') ?? ''
+    setQuery((prev) => (prev === qParam ? prev : qParam))
+  }, [params])
 
   const tab = params.get('tab') === 'users' ? 'users' : 'images'
   const setTab = (next) => {
-    if (next === 'users') setParams({ tab: 'users' })
-    else setParams({})
+    const q = query.trim()
+    if (next === 'users') setParams({ tab: 'users', ...(q ? { q } : {}) })
+    else setParams(q ? { q } : {})
   }
+
 
   const ownerNames = useMemo(
     () => new Map((users ?? []).map((u) => [u.id, u.nickname])),
@@ -65,8 +73,6 @@ export function ExplorePage() {
 
   return (
     <main className="container">
-      <h1>{t('explore.title')}</h1>
-
       <div className="explore-tabs" role="tablist">
         <button
           type="button"
@@ -116,16 +122,6 @@ export function ExplorePage() {
         </section>
       ) : (
         <section>
-          <label className="explore-search">
-            {t('explore.searchLabel')}
-            <input
-              type="search"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder={t('explore.searchPlaceholder')}
-            />
-          </label>
-
           {loading ? (
             <MasonrySkeleton count={12} />
           ) : q ? (

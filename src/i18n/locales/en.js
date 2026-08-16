@@ -22,6 +22,10 @@ export default {
     uploadImage: 'Upload image',
     menuOpen: 'Open menu',
     menuClose: 'Close menu',
+    searchPlaceholder: 'Search images…',
+    searchAria: 'Search',
+    collapseSidebar: 'Collapse sidebar',
+    expandSidebar: 'Expand sidebar',
   },
 
   home: {
@@ -91,6 +95,7 @@ export default {
     share: 'Share',
     copied: 'Link copied!',
     confirmDelete: 'Delete this image?',
+    category: 'Category',
   },
 
   upload: {
@@ -98,6 +103,14 @@ export default {
     dragHint: 'Click or drag an image here',
     nameLabel: 'Name (optional)',
     namePlaceholder: 'The file name is used if left empty',
+    categoryLabel: 'Category (optional)',
+    categoryPlaceholder: 'E.g. Landscape, Portrait, Art…',
+    catLandscape: 'Landscape',
+    catPortrait: 'Portrait',
+    catArt: 'Art',
+    catNature: 'Nature',
+    catUrban: 'Urban',
+    catFood: 'Food',
     descriptionLabel: 'Description (optional)',
     submit: 'Upload',
     submitting: 'Uploading…',

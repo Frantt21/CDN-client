@@ -33,17 +33,19 @@ VITE_API_TARGET=http://localhost:5220 npm run dev
 ```
 src/
 ├── api.js                  cliente HTTP (fetch) con JWT, refresh de sesión y endpoints
-├── App.jsx                 rutas + navegación (CardNav)
+├── App.jsx                 rutas + layout (Sidebar + app-shell)
 ├── auth/
 │   └── AuthContext.jsx     sesión global (login/registro/logout, persistida)
 ├── components/
-│   ├── CardNav.jsx         navegación por tarjetas + badge admin
 │   ├── Dialog.jsx          diálogo modal (edición de perfil)
 │   ├── ImageCard.jsx       tarjeta de imagen (subidas recientes)
+│   ├── ImagePositionEditor.jsx  editor de posición/zoom de avatar y banner (drag 1:1)
 │   ├── Masonry.jsx         grid masonry nativo (CSS Grid, lazy loading)
 │   ├── ProtectedRoute.jsx  redirige a /login si no hay sesión
+│   ├── SearchBar.jsx       búsqueda global en el body (redirige a /explore?q=)
+│   ├── Sidebar.jsx         sidebar flotante colapsable a íconos (navegación)
 │   ├── Skeletons.jsx       skeletons de carga (masonry, perfil, detalle)
-│   └── UserAvatar.jsx      avatar con fallback a la inicial
+│   └── UserAvatar.jsx      avatar con fallback a la inicial y posición guardada
 ├── hooks/
 │   └── useFeed.js          feed global: datos + caché + polling + realtime
 ├── i18n/
@@ -62,6 +64,7 @@ src/
 │   └── client.js           cliente SignalR (singleton + reconexión)
 └── utils/
     ├── cache.js            helpers de caché en localStorage
+    ├── imagePosition.js    parseo y estilos de posición (getImageStyle/getBackgroundStyle)
     └── masonry.js          convierte imágenes de la API en items del grid
 ```
 
@@ -70,10 +73,10 @@ src/
 | Ruta | Descripción |
 |---|---|
 | `/` | Feed: galería pública |
-| `/explore` | Explorar: imágenes / usuarios + búsqueda |
-| `/users/:username` | Perfil (banner de fondo, avatar, tabs feed/guardados, edición y copiar URL) |
+| `/explore` | Explorar: imágenes / usuarios + búsqueda (`?q=` para preseleccionar) |
+| `/users/:username` | Perfil (banner de fondo ajustable, avatar, tabs feed/guardados, edición y copiar URL) |
 | `/images/:id` | Detalle de imagen + recomendaciones |
-| `/upload` | Subir imagen (requiere sesión) |
+| `/upload` | Subir imagen como página completa (requiere sesión) |
 | `/settings` | Ajustes (requiere sesión) |
 | `/login` / `/register` | Ingresar / registrarse |
 
@@ -99,7 +102,11 @@ src/
 ## Notas
 
 - La sesión se guarda en `localStorage` (`cdn_token`, `cdn_user`, `cdn_refresh_token`) y se renueva automáticamente con el refresh token (una petición en vuelo).
-- **Perfil**: el usuario puede subir avatar y **banner** (fondo de la sección); el menú de tres puntos permite copiar la URL del perfil.
+- **Perfil**: el usuario puede subir avatar y **banner** (fondo de la sección) y **ajustar su posición/zoom** arrastrando con el editor del diálogo (drag 1:1 + slider de zoom, mismo radio que el contenedor real); el menú de tres puntos (horizontal) permite copiar la URL del perfil.
+- **Layout**: la navegación es un **sidebar flotante** a la izquierda (glass), **colapsable a íconos** (la preferencia se guarda en `localStorage`); en móvil se pliega y se abre con el botón flotante. La **búsqueda global** vive en el body (`SearchBar`, arriba de todo el app, sin borde y a todo el ancho) y redirige a `/explore?q=...`; en `/explore` no hay input propio, la URL `?q=` es la fuente.
+- **Categoría**: las imágenes pueden llevar una categoría opcional (input con sugerencias al subir); se muestra **solo en el detalle** (`detail.category`), nunca en las cards.
+- **Upload** es una ruta completa (`/upload`), no un diálogo: el formulario y los recientes son parte de la página.
+- **Posición de avatar/banner**: todos los contenedores que los muestran (perfil, sidebar, listas) usan `getImageStyle`/el mismo ratio que el editor — el banner del perfil se renderiza como `<img>` con `object-fit: contain` + zoom + translate dentro de un contenedor clipeado, idéntico al editor (que mide el ratio real de la sección).
 - **Borrar** una imagen: solo el dueño o un usuario con rol `admin`.
 - Los usuarios admin ven el badge `admin` y pueden borrar imágenes ajenas.
 - Idioma: español e inglés (`i18n`), con selector en Ajustes.

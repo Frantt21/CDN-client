@@ -302,6 +302,11 @@ export function ImageDetailPage({ id }) {
         </div>
         <div className="detail-meta">
           <h1>{image.name}</h1>
+          {image.category && (
+            <p className="detail-category">
+              {t('detail.category')}: {image.category}
+            </p>
+          )}
           {image.description && <p>{image.description}</p>}
           <p className="muted">
             {ownerNames.get(image.userId) ?? t('common.userFallback', { id: image.userId })} ·{' '}

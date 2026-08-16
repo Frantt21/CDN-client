@@ -22,6 +22,10 @@ export default {
     uploadImage: 'Subir imagen',
     menuOpen: 'Abrir menú',
     menuClose: 'Cerrar menú',
+    searchPlaceholder: 'Buscar imágenes…',
+    searchAria: 'Buscar',
+    collapseSidebar: 'Retraer barra lateral',
+    expandSidebar: 'Expandir barra lateral',
   },
 
   home: {
@@ -91,6 +95,7 @@ export default {
     share: 'Compartir',
     copied: '¡Enlace copiado!',
     confirmDelete: '¿Eliminar esta imagen?',
+    category: 'Categoría',
   },
 
   upload: {
@@ -98,6 +103,14 @@ export default {
     dragHint: 'Hacé clic o arrastrá una imagen acá',
     nameLabel: 'Nombre (opcional)',
     namePlaceholder: 'Se usa el nombre del archivo si lo dejás vacío',
+    categoryLabel: 'Categoría (opcional)',
+    categoryPlaceholder: 'Ej: Paisaje, Retrato, Arte…',
+    catLandscape: 'Paisaje',
+    catPortrait: 'Retrato',
+    catArt: 'Arte',
+    catNature: 'Naturaleza',
+    catUrban: 'Urbano',
+    catFood: 'Comida',
     descriptionLabel: 'Descripción (opcional)',
     submit: 'Subir',
     submitting: 'Subiendo…',

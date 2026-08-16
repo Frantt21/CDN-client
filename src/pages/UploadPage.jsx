@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { api } from '../api'
-import { Dialog } from '../components/Dialog'
 import { ImageCard } from '../components/ImageCard'
 import { useFeed } from '../hooks/useFeed'
 
@@ -13,6 +12,7 @@ export function UploadPage() {
   const recent = (images ?? []).slice(0, 8)
   const [file, setFile] = useState(null)
   const [name, setName] = useState('')
+  const [category, setCategory] = useState('')
   const [description, setDescription] = useState('')
   const [error, setError] = useState(null)
   const [busy, setBusy] = useState(false)
@@ -29,8 +29,6 @@ export function UploadPage() {
     if (f) setFile(f)
   }
 
-  const handleClose = () => navigate('/')
-
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (!file) {
@@ -43,9 +41,10 @@ export function UploadPage() {
       await api.uploadImage({
         file,
         name: name.trim() || undefined,
+        category: category.trim() || undefined,
         description: description.trim() || undefined,
       })
-      handleClose()
+      navigate('/')
     } catch (err) {
       setError(err instanceof Error ? err.message : t('upload.submitError'))
     } finally {
@@ -65,8 +64,9 @@ export function UploadPage() {
     <main className="container upload-page">
       <h1>{t('upload.title')}</h1>
 
-      <Dialog open onClose={handleClose} title={t('upload.title')}>
-        <form className="form" onSubmit={handleSubmit}>
+      <form className="upload-layout" onSubmit={handleSubmit}>
+        {/* Zona de archivo: sola, a la izquierda del layout */}
+        <div className="upload-drop">
           {error && <p className="error">{error}</p>}
           <label
             className={dropClasses}
@@ -85,7 +85,10 @@ export function UploadPage() {
             />
             <span>{file ? file.name : t('upload.dragHint')}</span>
           </label>
+        </div>
 
+        {/* El resto del espacio: los inputs */}
+        <div className="upload-fields">
           <label>
             {t('upload.nameLabel')}
             <input
@@ -96,18 +99,37 @@ export function UploadPage() {
             />
           </label>
           <label>
+            {t('upload.categoryLabel')}
+            <input
+              type="text"
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+              placeholder={t('upload.categoryPlaceholder')}
+              list="upload-categories"
+              maxLength={64}
+            />
+            <datalist id="upload-categories">
+              <option value={t('upload.catLandscape')} />
+              <option value={t('upload.catPortrait')} />
+              <option value={t('upload.catArt')} />
+              <option value={t('upload.catNature')} />
+              <option value={t('upload.catUrban')} />
+              <option value={t('upload.catFood')} />
+            </datalist>
+          </label>
+          <label>
             {t('upload.descriptionLabel')}
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              rows={3}
+              rows={4}
             />
           </label>
           <button type="submit" className="btn btn-primary btn-block" disabled={busy}>
             {busy ? t('upload.submitting') : t('upload.submit')}
           </button>
-        </form>
-      </Dialog>
+        </div>
+      </form>
 
       <section className="carousel-section">
         <h2>{t('upload.recent')}</h2>

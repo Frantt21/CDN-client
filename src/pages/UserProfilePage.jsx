@@ -4,11 +4,13 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { api, ApiError, avatarUrl, bannerUrl } from '../api'
 import { useAuth } from '../auth/AuthContext'
 import { Dialog } from '../components/Dialog'
+import ImagePositionEditor from '../components/ImagePositionEditor'
 import Masonry from '../components/Masonry'
 import { MasonrySkeleton, ProfileSkeleton } from '../components/Skeletons'
 import { UserAvatar } from '../components/UserAvatar'
 import { useFeed } from '../hooks/useFeed'
 import { ensureConnected, onRealtime } from '../realtime/client'
+import { getImageStyle } from '../utils/imagePosition'
 import { imageToMasonryItem } from '../utils/masonry'
 import { readCached, writeCached } from '../utils/cache'
 
@@ -40,13 +42,13 @@ function ThreeDotsIcon() {
     <svg
       aria-hidden="true"
       viewBox="0 0 24 24"
-      width="18"
-      height="18"
+      width="16"
+      height="16"
       fill="currentColor"
     >
-      <circle cx="12" cy="5" r="1.7" />
+      <circle cx="5" cy="12" r="1.7" />
       <circle cx="12" cy="12" r="1.7" />
-      <circle cx="12" cy="19" r="1.7" />
+      <circle cx="19" cy="12" r="1.7" />
     </svg>
   )
 }
@@ -121,6 +123,8 @@ export function UserProfilePage() {
   const [avatarPreview, setAvatarPreview] = useState(null)
   const [bannerFile, setBannerFile] = useState(null)
   const [bannerPreview, setBannerPreview] = useState(null)
+  const [avatarPosition, setAvatarPosition] = useState(() => readCached(profileCacheKey(username), PROFILE_TTL_MS)?.avatarPosition ?? null)
+  const [bannerPosition, setBannerPosition] = useState(() => readCached(profileCacheKey(username), PROFILE_TTL_MS)?.bannerPosition ?? null)
   const [usernameStatus, setUsernameStatus] = useState('idle') // idle | checking | available | taken | invalid
   const [saveError, setSaveError] = useState(null)
   const [saving, setSaving] = useState(false)
@@ -128,6 +132,23 @@ export function UserProfilePage() {
   const [copied, setCopied] = useState(false)
   const avatarInputRef = useRef(null)
   const bannerInputRef = useRef(null)
+  const profileRef = useRef(null)
+  // Ratio del contenedor real del banner (la sección): el editor usa el mismo
+  // ratio para que el preview coincida exactamente con el render (como FastChange,
+  // que fija el ratio del contenedor y se lo pasa al editor).
+  const [bannerAspect, setBannerAspect] = useState(3.2)
+
+  useEffect(() => {
+    const measure = () => {
+      const el = profileRef.current
+      if (el && el.offsetWidth > 0 && el.offsetHeight > 0) {
+        setBannerAspect(el.offsetWidth / el.offsetHeight)
+      }
+    }
+    measure()
+    window.addEventListener('resize', measure)
+    return () => window.removeEventListener('resize', measure)
+  }, [])
 
   const isOwnProfile = currentUser?.userId === user?.id
   const tab = params.get('tab') === 'saved' ? 'saved' : 'feed'
@@ -251,6 +272,11 @@ export function UserProfilePage() {
 
   const startEditing = () => {
     if (!user) return
+    // Re-medir el ratio del banner al abrir el diálogo (el editor lo usa).
+    const el = profileRef.current
+    if (el && el.offsetWidth > 0 && el.offsetHeight > 0) {
+      setBannerAspect(el.offsetWidth / el.offsetHeight)
+    }
     setNickname(user.nickname)
     setEditUsername(user.username)
     setDescription(user.description ?? '')
@@ -258,6 +284,8 @@ export function UserProfilePage() {
     setAvatarPreview(null)
     setBannerFile(null)
     setBannerPreview(null)
+    setAvatarPosition(user.avatarPosition ?? null)
+    setBannerPosition(user.bannerPosition ?? null)
     setUsernameStatus('idle')
     setSaveError(null)
     setEditing(true)
@@ -267,12 +295,15 @@ export function UserProfilePage() {
     const file = e.target.files?.[0] ?? null
     setAvatarFile(file)
     setAvatarPreview(file ? URL.createObjectURL(file) : null)
+    // Imagen nueva: la posición arranca en el centro (como el editor al cargar).
+    if (file) setAvatarPosition(JSON.stringify({ x: 50, y: 50, zoom: 1 }))
   }
 
   const handleBannerChange = (e) => {
     const file = e.target.files?.[0] ?? null
     setBannerFile(file)
     setBannerPreview(file ? URL.createObjectURL(file) : null)
+    if (file) setBannerPosition(JSON.stringify({ x: 50, y: 50, zoom: 1.05 }))
   }
 
   const handleCopyUrl = async () => {
@@ -306,11 +337,11 @@ export function UserProfilePage() {
         description: description.trim() || null,
       })
       let next = updated
-      if (avatarFile) {
-        next = await api.updateAvatar(user.id, avatarFile)
+      if (avatarFile || avatarPosition !== (user.avatarPosition ?? null)) {
+        next = await api.updateAvatar(user.id, avatarFile, avatarPosition)
       }
-      if (bannerFile) {
-        next = await api.updateBanner(user.id, bannerFile)
+      if (bannerFile || bannerPosition !== (user.bannerPosition ?? null)) {
+        next = await api.updateBanner(user.id, bannerFile, bannerPosition)
       }
       setUser(next)
       updateUser({
@@ -318,6 +349,8 @@ export function UserProfilePage() {
         username: next.username,
         ...(next.avatarUrl ? { avatarUrl: next.avatarUrl } : {}),
         ...(next.bannerUrl ? { bannerUrl: next.bannerUrl } : {}),
+        ...(next.avatarPosition ? { avatarPosition: next.avatarPosition } : {}),
+        ...(next.bannerPosition ? { bannerPosition: next.bannerPosition } : {}),
       })
       setEditing(false)
       // Guarda el perfil actualizado bajo su clave (nueva si cambió el username)
@@ -394,10 +427,16 @@ export function UserProfilePage() {
 
   return (
     <main className="container">
-      <section
-        className={`profile${user.bannerUrl ? ' has-banner' : ''}`}
-        style={user.bannerUrl ? { backgroundImage: `url(${bannerUrl(user.id)})` } : undefined}
-      >
+      <section ref={profileRef} className="profile">
+        {user.bannerUrl && (
+          <div className="profile-banner">
+            <img
+              src={bannerUrl(user.id)}
+              alt=""
+              style={getImageStyle(user.bannerPosition)}
+            />
+          </div>
+        )}
         <UserAvatar user={user} className="avatar-lg" />
         <div className="profile-info">
           <h1>
@@ -411,14 +450,14 @@ export function UserProfilePage() {
           {user.description && <p className="profile-description">{user.description}</p>}
           <div className="profile-actions">
             {isOwnProfile && (
-              <button type="button" className="btn btn-secondary" onClick={startEditing}>
+              <button type="button" className="btn btn-glass" onClick={startEditing}>
                 {t('profile.editProfile')}
               </button>
             )}
             <div className="masonry-menu" data-menu>
               <button
                 type="button"
-                className="masonry-menu-toggle"
+                className="btn btn-glass profile-dots-btn"
                 aria-label={t('profile.moreOptions')}
                 aria-expanded={menuOpen}
                 onClick={() => setMenuOpen((prev) => !prev)}
@@ -442,25 +481,38 @@ export function UserProfilePage() {
         <form className="form" onSubmit={handleSave}>
           {saveError && <p className="error">{saveError}</p>}
 
-          <div className="banner-picker">
-            <button
-              type="button"
-              className="banner-picker-btn"
-              aria-label={t('profile.changeBanner')}
-              title={t('profile.changeBanner')}
-              onClick={() => bannerInputRef.current?.click()}
-            >
-              {bannerPreview ? (
-                <img src={bannerPreview} alt="" />
-              ) : user.bannerUrl ? (
-                <img src={bannerUrl(user.id)} alt="" />
-              ) : (
+          <div className="media-editor">
+            {bannerPreview || user.bannerUrl ? (
+              <>
+                <ImagePositionEditor
+                  key={bannerPreview ?? bannerUrl(user.id)}
+                  imageUrl={bannerPreview ?? bannerUrl(user.id)}
+                  initialPosition={bannerPosition}
+                  aspectRatio={bannerAspect}
+                  onPositionChange={setBannerPosition}
+                />
+                <button
+                  type="button"
+                  className="btn btn-glass btn-sm"
+                  onClick={() => bannerInputRef.current?.click()}
+                >
+                  {t('profile.changeBanner')}
+                </button>
+              </>
+            ) : (
+              <button
+                type="button"
+                className="banner-picker-btn"
+                aria-label={t('profile.changeBanner')}
+                title={t('profile.changeBanner')}
+                onClick={() => bannerInputRef.current?.click()}
+              >
                 <span className="banner-picker-placeholder">{t('profile.banner')}</span>
-              )}
-              <span className="avatar-picker-overlay" aria-hidden="true">
-                <PencilIcon />
-              </span>
-            </button>
+                <span className="avatar-picker-overlay" aria-hidden="true">
+                  <PencilIcon />
+                </span>
+              </button>
+            )}
             <input
               ref={bannerInputRef}
               type="file"
@@ -471,25 +523,41 @@ export function UserProfilePage() {
             {bannerFile && <span className="muted">{bannerFile.name}</span>}
           </div>
 
-          <div className="avatar-picker">
-            <button
-              type="button"
-              className="avatar-picker-btn"
-              aria-label={t('profile.changeAvatar')}
-              title={t('profile.changeAvatar')}
-              onClick={() => avatarInputRef.current?.click()}
-            >
-              {avatarPreview ? (
-                <img src={avatarPreview} alt="" />
-              ) : user.avatarUrl ? (
-                <img src={avatarUrl(user.id)} alt="" />
-              ) : (
+          <div className="media-editor avatar-editor">
+            {avatarPreview || user.avatarUrl ? (
+              <>
+                <div className="avatar-editor-box">
+                  <ImagePositionEditor
+                    key={avatarPreview ?? avatarUrl(user.id)}
+                    imageUrl={avatarPreview ?? avatarUrl(user.id)}
+                    initialPosition={avatarPosition}
+                    aspectRatio={1}
+                    circular
+                    onPositionChange={setAvatarPosition}
+                  />
+                </div>
+                <button
+                  type="button"
+                  className="btn btn-glass btn-sm"
+                  onClick={() => avatarInputRef.current?.click()}
+                >
+                  {t('profile.changeAvatar')}
+                </button>
+              </>
+            ) : (
+              <button
+                type="button"
+                className="avatar-picker-btn"
+                aria-label={t('profile.changeAvatar')}
+                title={t('profile.changeAvatar')}
+                onClick={() => avatarInputRef.current?.click()}
+              >
                 <span className="avatar-picker-initial">{user.nickname?.[0]?.toUpperCase()}</span>
-              )}
-              <span className="avatar-picker-overlay" aria-hidden="true">
-                <PencilIcon />
-              </span>
-            </button>
+                <span className="avatar-picker-overlay" aria-hidden="true">
+                  <PencilIcon />
+                </span>
+              </button>
+            )}
             <input
               ref={avatarInputRef}
               type="file"
@@ -578,7 +646,6 @@ export function UserProfilePage() {
         para que las cards NO se re-monten al alternar feed/saved.
       */}
       <section hidden={isOwnProfile && tab !== 'feed'} aria-hidden={isOwnProfile && tab !== 'feed'}>
-        <h2>{t('profile.imagesOf', { nickname: user.nickname })}</h2>
         {feedLoading ? (
           <MasonrySkeleton count={8} />
         ) : feedItems.length === 0 ? (
@@ -594,7 +661,6 @@ export function UserProfilePage() {
 
       {isOwnProfile && (
         <section hidden={tab !== 'saved'} aria-hidden={tab !== 'saved'}>
-          <h2>{t('profile.savedOf', { nickname: user.nickname })}</h2>
           {savedItems.length === 0 ? (
             <p className="muted">
               {t('profile.noSavedYet')} {t('profile.savedHint')}

@@ -1,9 +1,9 @@
-import { useMemo } from 'react'
-import { useTranslation } from 'react-i18next'
+import { useState } from 'react'
 import { BrowserRouter, Navigate, Route, Routes, useParams } from 'react-router-dom'
-import { AuthProvider, useAuth } from './auth/AuthContext'
-import CardNav from './components/CardNav'
+import { AuthProvider } from './auth/AuthContext'
 import { ProtectedRoute } from './components/ProtectedRoute'
+import SearchBar from './components/SearchBar'
+import Sidebar from './components/Sidebar'
 import { HomePage } from './pages/HomePage'
 import { LoginPage } from './pages/LoginPage'
 import { RegisterPage } from './pages/RegisterPage'
@@ -35,84 +35,55 @@ function ImageDetailRoute() {
   return <ImageDetailPage key={id} id={id} />
 }
 
+const COLLAPSE_KEY = 'cdn_sidebar_collapsed'
+
 function AppContent() {
-  const { user } = useAuth()
-  const { t } = useTranslation()
-
-  const profileTo = user ? `/users/${user.username}` : '/login'
-  const savedTo = user ? `/users/${user.username}?tab=saved` : '/login'
-
-  const navItems = useMemo(
-    () => [
-      {
-        label: t('nav.home'),
-        bgColor: '#21161A',
-        textColor: '#F2F4F3',
-        links: [
-          { label: t('nav.feed'), ariaLabel: t('nav.feed'), to: '/' },
-          { label: t('nav.profile'), ariaLabel: t('nav.profile'), to: profileTo },
-          { label: t('nav.settings'), ariaLabel: t('nav.settings'), to: '/settings' },
-        ],
-      },
-      {
-        label: t('nav.explore'),
-        bgColor: '#21161A',
-        textColor: '#F2F4F3',
-        links: [
-          { label: t('nav.search'), ariaLabel: t('nav.search'), to: '/explore' },
-          { label: t('nav.saved'), ariaLabel: t('nav.saved'), to: savedTo },
-        ],
-      },
-      {
-        label: t('nav.upload'),
-        bgColor: '#49111C',
-        textColor: '#F2F4F3',
-        links: [
-          { label: t('nav.uploadImage'), ariaLabel: t('nav.uploadImage'), to: '/upload' },
-        ],
-      },
-    ],
-    [profileTo, savedTo, t],
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(
+    () => localStorage.getItem(COLLAPSE_KEY) === '1',
   )
+
+  const toggleCollapse = () => {
+    setSidebarCollapsed((prev) => {
+      const next = !prev
+      localStorage.setItem(COLLAPSE_KEY, next ? '1' : '0')
+      return next
+    })
+  }
 
   return (
     <>
-      <CardNav
-        items={navItems}
-        brandText="CDN-backend"
-        baseColor="#151013"
-        menuColor="#F2F4F3"
-        buttonBgColor="#49111C"
-        buttonTextColor="#F2F4F3"
-        ctaLabel="Subir"
-        ctaTo="/upload"
-      />
-      <Routes>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/feed" element={<Navigate to="/" replace />} />
-        <Route path="/explore" element={<ExplorePage />} />
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<RegisterPage />} />
-        <Route path="/users/:username" element={<ProfileRoute />} />
-        <Route path="/images/:id" element={<ImageDetailRoute />} />
-        <Route
-          path="/settings"
-          element={
-            <ProtectedRoute>
-              <SettingsPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/upload"
-          element={
-            <ProtectedRoute>
-              <UploadPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route path="*" element={<HomePage />} />
-      </Routes>
+      <Sidebar collapsed={sidebarCollapsed} onToggleCollapse={toggleCollapse} />
+      <div className={`app-shell${sidebarCollapsed ? ' collapsed' : ''}`}>
+        <div className="app-topbar">
+          <SearchBar />
+        </div>
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/feed" element={<Navigate to="/" replace />} />
+          <Route path="/explore" element={<ExplorePage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
+          <Route path="/users/:username" element={<ProfileRoute />} />
+          <Route path="/images/:id" element={<ImageDetailRoute />} />
+          <Route
+            path="/settings"
+            element={
+              <ProtectedRoute>
+                <SettingsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/upload"
+            element={
+              <ProtectedRoute>
+                <UploadPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route path="*" element={<HomePage />} />
+        </Routes>
+      </div>
     </>
   )
 }

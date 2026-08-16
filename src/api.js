@@ -182,15 +182,17 @@ export const api = {
   updateProfile: (id, data) =>
     request(`/users/${id}`, { method: 'PUT', body: JSON.stringify(data) }, true),
 
-  updateAvatar: (id, file) => {
+  updateAvatar: (id, file, position) => {
     const form = new FormData()
-    form.append('file', file)
+    if (file) form.append('file', file)
+    if (position) form.append('position', position)
     return request(`/users/${id}/avatar`, { method: 'POST', body: form }, true)
   },
 
-  updateBanner: (id, file) => {
+  updateBanner: (id, file, position) => {
     const form = new FormData()
-    form.append('file', file)
+    if (file) form.append('file', file)
+    if (position) form.append('position', position)
     return request(`/users/${id}/banner`, { method: 'POST', body: form }, true)
   },
 
@@ -203,6 +205,7 @@ export const api = {
     const form = new FormData()
     if (data.name) form.append('name', data.name)
     if (data.description) form.append('description', data.description)
+    if (data.category) form.append('category', data.category)
     form.append('file', data.file)
     return request('/images', { method: 'POST', body: form }, true)
   },

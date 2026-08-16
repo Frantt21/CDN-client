@@ -29,9 +29,9 @@
   --color-danger: #E5484D;
 
   /* ===== Forma y efectos ===== */
-  --radius: 10px;
-  --radius-sm: 8px;
-  --radius-lg: 14px;
+  --radius: 12px;
+  --radius-sm: 12px;
+  --radius-lg: 12px;
   --blur: 16px;
 }
 
@@ -64,8 +64,112 @@ h2 {
 }
 
 /* Contenedores */
+.app-shell {
+  margin-left: 264px;
+  min-height: 100vh;
+  transition: margin-left 0.2s ease;
+}
+
+.app-shell.collapsed {
+  margin-left: 76px;
+}
+
+@media (max-width: 768px) {
+  .app-shell {
+    margin-left: 0;
+  }
+
+  .app-shell.collapsed {
+    margin-left: 0;
+  }
+}
+
+/* Barra superior del body con la búsqueda global */
+.app-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  padding: 0.9rem 1.5rem 0.6rem;
+  background: linear-gradient(to bottom, var(--color-bg) 80%, rgba(19, 16, 15, 0));
+}
+
+@media (max-width: 768px) {
+  /* Deja espacio para el botón flotante del sidebar en móvil */
+  .app-topbar {
+    padding-left: 64px;
+    padding-right: 1rem;
+  }
+}
+
 .container {
   padding: 2rem 1.5rem;
+}
+
+/* Formulario de subida como página: zona de archivo a la izquierda,
+   inputs ocupando el resto del espacio. */
+.upload-layout {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 1.5rem;
+  align-items: start;
+  background: var(--color-surface);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.35);
+}
+
+.upload-drop {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.upload-drop .file-drop {
+  min-height: 320px;
+  margin: 0;
+  width: 100%;
+}
+
+.upload-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-width: 0;
+}
+
+.upload-fields label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+}
+
+.upload-fields input,
+.upload-fields textarea {
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-text);
+  padding: 0.6rem 0.75rem;
+  font-size: 0.95rem;
+  font-family: inherit;
+}
+
+.upload-fields input:focus,
+.upload-fields textarea:focus {
+  outline: none;
+  border-color: var(--color-accent);
+}
+
+@media (max-width: 768px) {
+  .upload-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .upload-drop .file-drop {
+    min-height: 200px;
+  }
 }
 
 .container.narrow {
@@ -92,24 +196,38 @@ h2 {
   background: var(--color-surface);
   border-radius: var(--radius);
   box-shadow: 0 6px 24px rgba(0, 0, 0, 0.35);
+  /* overflow visible: el dropdown de opciones se abre fuera de la sección */
+  overflow: visible;
+}
+
+/* El banner es una capa interna (clipeada por su propio border-radius) para
+   que el contenido y los dropdowns puedan sobresalir de la sección. La imagen
+   se renderiza con <img> + getImageStyle (object-fit: contain + zoom + translate),
+   igual que el editor, para que el preview coincida con el render. */
+.profile-banner {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
   overflow: hidden;
+  background-color: var(--color-surface-raised);
 }
 
-/* Con banner: la sección usa la imagen como fondo con un overlay oscuro
-   para mantener legible el contenido por encima. */
-.profile.has-banner {
-  background-size: cover;
-  background-position: center center;
+.profile-banner img {
+  display: block;
+  position: absolute;
+  left: 0;
+  top: 0;
 }
 
-.profile.has-banner::before {
+.profile-banner::after {
   content: '';
   position: absolute;
   inset: 0;
   background: linear-gradient(to bottom, rgba(10, 9, 8, 0.35), rgba(10, 9, 8, 0.82));
 }
 
-.profile > * {
+.profile > *:not(.profile-banner) {
   position: relative;
   z-index: 1;
 }
@@ -137,6 +255,14 @@ h2 {
   position: relative;
   top: auto;
   right: auto;
+  z-index: 6;
+}
+
+.profile-dots-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.45rem 0.75rem;
 }
 
 .profile-actions .masonry-dropdown {
@@ -182,6 +308,25 @@ a.btn {
 
 .btn-secondary:hover {
   color: var(--color-text);
+}
+
+/* Botón con fondo glass translúcido (editar perfil, menú de opciones). */
+.btn-glass {
+  background: var(--color-glass);
+  border: 1px solid var(--color-glass-border);
+  color: var(--color-text);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.btn-glass:hover {
+  background: rgba(10, 9, 8, 0.75);
+  color: var(--color-text);
+}
+
+.btn-sm {
+  padding: 0.3rem 0.8rem;
+  font-size: 0.8rem;
 }
 
 .btn-danger {
@@ -386,13 +531,21 @@ select:focus {
 
 .avatar-img {
   padding: 0;
+}
+
+/* Capa de recorte interna: hereda el radio del contenedor y clipea la imagen
+   posicionada (width/height z*100% + translate de getImageStyle). */
+.avatar-clip {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
   overflow: hidden;
 }
 
 .avatar-img img {
   width: 100%;
   height: 100%;
-  border-radius: 50%;
   object-fit: cover;
   display: block;
 }
@@ -633,6 +786,18 @@ select:focus {
   margin: 0;
 }
 
+.detail-category {
+  display: inline-block;
+  margin: 0.5rem 0 0;
+  padding: 0.15rem 0.65rem;
+  border-radius: 999px;
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
 .detail-meta .image-actions {
   margin-top: 0.75rem;
 }
@@ -771,6 +936,27 @@ select:focus {
   background: transparent;
   box-shadow: none;
   padding: 0;
+}
+
+/* ===== Editores de imagen en el diálogo (drag + zoom) ===== */
+.media-editor {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.avatar-editor-box {
+  width: 128px;
+  margin: 0 auto;
+}
+
+.imgpos-icon {
+  width: 14px;
+  height: 14px;
+  opacity: 0.5;
+  flex-shrink: 0;
 }
 
 /* ===== Selector de banner en el diálogo ===== */
