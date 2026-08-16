@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { extractDominantColor } from '../utils/colors'
 import './Masonry.css'
 
 /** Cantidad de columnas según el ancho de pantalla (matchMedia nativo). */
@@ -34,6 +35,24 @@ function ThreeDotsIcon() {
       <circle cx="12" cy="5" r="1.7" />
       <circle cx="12" cy="12" r="1.7" />
       <circle cx="12" cy="19" r="1.7" />
+    </svg>
+  )
+}
+
+function PencilIcon() {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 24 24"
+      width="14"
+      height="14"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" />
     </svg>
   )
 }
@@ -95,10 +114,23 @@ const Masonry = ({ items, scaleOnHover = true, hoverScale = 0.95, onItemClick })
     1,
   )
   const [openMenuId, setOpenMenuId] = useState(null)
+  // Color dominante por card (extraído del thumbnail, cacheado en localStorage):
+  // se usa como fondo del contenedor para el efecto hover.
+  const [cardColors, setCardColors] = useState({})
 
   useEffect(() => {
     setOpenMenuId(null)
   }, [items])
+
+  const handleHover = (item) => {
+    if (cardColors[item.id] !== undefined) return
+    extractDominantColor(item.img).then((color) => {
+      if (!color) return
+      setCardColors((prev) =>
+        prev[item.id] !== undefined ? prev : { ...prev, [item.id]: color },
+      )
+    })
+  }
 
   useEffect(() => {
     if (openMenuId === null) return
@@ -117,7 +149,10 @@ const Masonry = ({ items, scaleOnHover = true, hoverScale = 0.95, onItemClick })
     <div className="masonry-list" style={{ '--masonry-cols': columns }}>
       {items.map((item) => {
         const span = Math.max(1, Math.round((item.height ?? 300) / 2))
-        const hasActions = Boolean(item.onToggleSave) || Boolean(item.canDelete && item.onDelete)
+        const hasActions =
+          Boolean(item.onToggleSave) ||
+          Boolean(item.onEdit) ||
+          Boolean(item.canDelete && item.onDelete)
 
         return (
           <div
@@ -125,8 +160,10 @@ const Masonry = ({ items, scaleOnHover = true, hoverScale = 0.95, onItemClick })
             className="item-wrapper"
             style={{
               '--hover-scale': scaleOnHover ? hoverScale : 1,
+              '--item-color': cardColors[item.id],
               gridRowEnd: `span ${span}`,
             }}
+            onMouseEnter={() => handleHover(item)}
             onClick={() => {
               if (onItemClick) onItemClick(item)
             }}
@@ -177,6 +214,19 @@ const Masonry = ({ items, scaleOnHover = true, hoverScale = 0.95, onItemClick })
                           >
                             <BookmarkIcon />
                             {item.saved ? t('masonry.saved') : t('masonry.save')}
+                          </button>
+                        )}
+                        {item.onEdit && (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              setOpenMenuId(null)
+                              item.onEdit(item.id)
+                            }}
+                          >
+                            <PencilIcon />
+                            {t('masonry.edit')}
                           </button>
                         )}
                         {item.canDelete && item.onDelete && (

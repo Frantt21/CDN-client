@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
+import { ImageEditDialog } from '../components/ImageEditDialog'
 import Masonry from '../components/Masonry'
 import { MasonrySkeleton } from '../components/Skeletons'
 import { UserAvatar } from '../components/UserAvatar'
@@ -12,7 +13,8 @@ export function ExplorePage() {
   const { user } = useAuth()
   const { t } = useTranslation()
   const navigate = useNavigate()
-  const { images, users, loading, savedIds, toggleSave, removeImage } = useFeed()
+  const { images, users, loading, savedIds, toggleSave, removeImage, updateImage } = useFeed()
+  const [editingImage, setEditingImage] = useState(null)
   const [params, setParams] = useSearchParams()
   const [query, setQuery] = useState(() => params.get('q') ?? '')
 
@@ -58,12 +60,20 @@ export function ExplorePage() {
     }
   }
 
+  const handleEdit = (id) => {
+    setEditingImage(allImages.find((img) => img.id === id) ?? null)
+  }
+
   const items = useMemo(
     () =>
       (q ? searchResults : recommended).map((img) => ({
         ...imageToMasonryItem(img, ownerNames.get(img.userId)),
         saved: savedIds.has(img.id),
         onToggleSave: user ? toggleSave : undefined,
+        onEdit:
+          user && (user.userId === img.userId || user.role === 'admin')
+            ? handleEdit
+            : undefined,
         canDelete: Boolean(user && (user.userId === img.userId || user.role === 'admin')),
         onDelete: user ? handleDelete : undefined,
       })),
@@ -153,6 +163,11 @@ export function ExplorePage() {
           )}
         </section>
       )}
+      <ImageEditDialog
+        image={editingImage}
+        onClose={() => setEditingImage(null)}
+        onSaved={updateImage}
+      />
     </main>
   )
 }

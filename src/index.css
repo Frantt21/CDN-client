@@ -192,6 +192,9 @@ h2 {
   display: flex;
   align-items: center;
   gap: 1.5rem;
+  /* Altura fija: el banner (que llena la sección) no cambia de ratio ni el
+     layout salta cuando cambia el contenido (descripción, contador, acciones). */
+  height: 240px;
   padding: 1.5rem;
   background: var(--color-surface);
   border-radius: var(--radius);
@@ -240,6 +243,11 @@ h2 {
 .profile-description {
   margin: 0.35rem 0 0;
   max-width: 56ch;
+  /* Máx. 2 líneas dentro de la altura fija (evita desbordes en pantallas chicas). */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .profile-actions {
@@ -258,10 +266,18 @@ h2 {
   z-index: 6;
 }
 
-.profile-dots-btn {
+/* Editar perfil y 3 puntos usan exactamente el mismo box model que cualquier
+   .btn del app (mismo padding y línea de texto): sin height forzado. El botón
+   de 3 puntos (svg 16px + padding 0.45rem) rinde la misma altura natural
+   (~32.4px) que un .btn de texto (~32.38px). */
+.profile-actions .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  white-space: nowrap;
+}
+
+.profile-actions .profile-dots-btn {
   padding: 0.45rem 0.75rem;
 }
 
@@ -311,8 +327,10 @@ a.btn {
 }
 
 /* Botón con fondo glass translúcido (editar perfil, menú de opciones). */
+/* Glass más transparente y claro: fondo blanco translúcido en vez del
+   oscuro al 55% (aplica a editar perfil, 3 puntos y botones del editor). */
 .btn-glass {
-  background: var(--color-glass);
+  background: rgba(242, 244, 243, 0.08);
   border: 1px solid var(--color-glass-border);
   color: var(--color-text);
   backdrop-filter: blur(10px);
@@ -320,7 +338,7 @@ a.btn {
 }
 
 .btn-glass:hover {
-  background: rgba(10, 9, 8, 0.75);
+  background: rgba(242, 244, 243, 0.16);
   color: var(--color-text);
 }
 
@@ -756,6 +774,7 @@ select:focus {
 }
 
 .detail-image-wrap {
+  position: relative;
   flex: 1 1 60%;
   min-width: 0;
   background: var(--color-surface);
@@ -771,6 +790,59 @@ select:focus {
   object-fit: contain;
   border-radius: var(--radius);
   background: var(--color-surface-raised);
+}
+
+/* Volver al inicio: ícono flotante sobre la imagen (arriba a la izquierda),
+   con el mismo fondo glass de los botones de edición del perfil. */
+.detail-back-btn {
+  position: absolute;
+  top: 18px;
+  left: 18px;
+  z-index: 2;
+  width: 38px;
+  height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(242, 244, 243, 0.08);
+  border: 1px solid var(--color-glass-border);
+  color: var(--color-text);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  transition: background 0.15s ease;
+}
+
+.detail-back-btn:hover {
+  background: rgba(242, 244, 243, 0.16);
+}
+
+/* Autor del detalle: avatar + nickname clicleable hacia su perfil. */
+.detail-owner {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.35rem 0.75rem 0.35rem 0.35rem;
+  border-radius: 999px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-glass-border);
+  color: var(--color-text);
+  text-decoration: none;
+  margin-bottom: 0.75rem;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.detail-owner:hover {
+  background: var(--color-surface-raised);
+  border-color: var(--color-border);
+}
+
+.detail-owner strong {
+  font-size: 0.9rem;
+}
+
+.detail-owner small {
+  color: var(--color-text-muted);
 }
 
 .detail-meta {
@@ -900,6 +972,10 @@ select:focus {
   font-size: 1.25rem;
 }
 
+.dialog-wide {
+  max-width: 760px;
+}
+
 .dialog-close {
   border: none;
   background: none;
@@ -938,18 +1014,56 @@ select:focus {
   padding: 0;
 }
 
-/* ===== Editores de imagen en el diálogo (drag + zoom) ===== */
-.media-editor {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.5rem;
-  margin-bottom: 0.75rem;
+/* ===== Diálogo de edición: editores a la izquierda, inputs a la derecha ===== */
+.media-editor-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
 }
 
-.avatar-editor-box {
-  width: 128px;
-  margin: 0 auto;
+.media-editor-col {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  min-width: 0;
+}
+
+.media-editor-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-width: 0;
+}
+
+.media-editor-fields label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+}
+
+.media-editor-fields input,
+.media-editor-fields textarea {
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-text);
+  padding: 0.6rem 0.75rem;
+  font-size: 0.95rem;
+  font-family: inherit;
+}
+
+.media-editor-fields input:focus,
+.media-editor-fields textarea:focus {
+  outline: none;
+  border-color: var(--color-accent);
+}
+
+.media-editor-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
 }
 
 .imgpos-icon {
@@ -957,6 +1071,12 @@ select:focus {
   height: 14px;
   opacity: 0.5;
   flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+  .media-editor-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* ===== Selector de banner en el diálogo ===== */

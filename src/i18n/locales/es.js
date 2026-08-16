@@ -158,7 +158,13 @@ export default {
     moreOptions: 'Más opciones',
     save: 'Guardar',
     saved: 'Guardado',
+    edit: 'Editar',
     delete: 'Eliminar',
+  },
+
+  editImage: {
+    title: 'Editar imagen',
+    saveError: 'Error al guardar los cambios',
   },
 
   feed: {

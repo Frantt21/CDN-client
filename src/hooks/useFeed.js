@@ -153,6 +153,7 @@ export function useFeed() {
     }
 
     const offUploaded = onRealtime('image:uploaded', debouncedRefresh)
+    const offUpdated = onRealtime('image:updated', debouncedRefresh)
     const offDeleted = onRealtime('image:deleted', (id) => {
       // Invalida el detalle de la imagen borrada para que no se muestre cacheado.
       try {
@@ -166,11 +167,28 @@ export function useFeed() {
 
     return () => {
       offUploaded()
+      offUpdated()
       offDeleted()
       offUserUpdated()
       if (refreshTimer.current) clearTimeout(refreshTimer.current)
     }
   }, [refresh])
+
+  const updateImage = useCallback(async (id, data) => {
+    try {
+      const updated = await api.updateImage(id, data)
+      setImages((prev) => {
+        const next = (prev ?? []).map((img) => (img.id === id ? updated : img))
+        writeCache(next, latest.current.users)
+        return next
+      })
+      // Actualiza el detalle cacheado para no mostrar datos viejos al volver.
+      writeCached(imageCacheKey(id), updated)
+      return updated
+    } catch (err) {
+      throw err instanceof Error ? err : new Error(i18n.t('editImage.saveError'))
+    }
+  }, [])
 
   const removeImage = useCallback(async (id) => {
     try {
@@ -198,5 +216,5 @@ export function useFeed() {
 
   const loading = images === null
 
-  return { images, users, loading, error, refresh, removeImage, savedIds, toggleSave }
+  return { images, users, loading, error, refresh, removeImage, updateImage, savedIds, toggleSave }
 }

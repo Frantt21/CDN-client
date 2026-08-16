@@ -210,6 +210,9 @@ export const api = {
     return request('/images', { method: 'POST', body: form }, true)
   },
 
+  updateImage: (id, data) =>
+    request(`/images/${id}`, { method: 'PUT', body: JSON.stringify(data) }, true),
+
   deleteImage: (id) =>
     request(`/images/${id}`, { method: 'DELETE' }, true),
 

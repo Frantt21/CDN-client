@@ -3,8 +3,10 @@ import { useTranslation } from 'react-i18next'
 import { Link, useNavigate } from 'react-router-dom'
 import { api, imageDownloadUrl, imageUrl } from '../api'
 import { useAuth } from '../auth/AuthContext'
+import { ImageEditDialog } from '../components/ImageEditDialog'
 import Masonry from '../components/Masonry'
 import { DetailSkeleton } from '../components/Skeletons'
+import { UserAvatar } from '../components/UserAvatar'
 import { useFeed } from '../hooks/useFeed'
 import { imageCacheKey, readCached, writeCached } from '../utils/cache'
 import { imageToMasonryItem } from '../utils/masonry'
@@ -45,6 +47,24 @@ function ThreeDotsIcon() {
   )
 }
 
+function PencilIcon() {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 24 24"
+      width="14"
+      height="14"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" />
+    </svg>
+  )
+}
+
 function DownloadIcon() {
   return (
     <svg
@@ -61,6 +81,25 @@ function DownloadIcon() {
       <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
       <path d="M7 10l5 5 5-5" />
       <path d="M12 15V3" />
+    </svg>
+  )
+}
+
+function BackIcon() {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 24 24"
+      width="18"
+      height="18"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M19 12H5" />
+      <path d="m12 19-7-7 7-7" />
     </svg>
   )
 }
@@ -131,7 +170,7 @@ export function ImageDetailPage({ id }) {
   const navigate = useNavigate()
   const { t } = useTranslation()
   const { user } = useAuth()
-  const { images, users, savedIds, toggleSave, removeImage } = useFeed()
+  const { images, users, savedIds, toggleSave, removeImage, updateImage } = useFeed()
 
   // Lazy-init desde la caché: al volver a una imagen ya vista se muestra al
   // instante y el fetch fresco se hace en segundo plano (stale-while-revalidate).
@@ -140,6 +179,7 @@ export function ImageDetailPage({ id }) {
   const [loading, setLoading] = useState(() => !readCached(imageCacheKey(id), IMAGE_TTL_MS))
   const [error, setError] = useState(null)
   const [deleting, setDeleting] = useState(false)
+  const [editingImage, setEditingImage] = useState(null)
   const [menuOpen, setMenuOpen] = useState(false)
   const [copied, setCopied] = useState(false)
 
@@ -182,6 +222,9 @@ export function ImageDetailPage({ id }) {
   )
 
   const currentId = Number(id)
+  const owner = (users ?? []).find((u) => u.id === image?.userId)
+  const canEditCurrent =
+    image && (user?.userId === image.userId || user?.role === 'admin')
   const canDeleteCurrent =
     image && (user?.userId === image.userId || user?.role === 'admin')
 
@@ -194,6 +237,21 @@ export function ImageDetailPage({ id }) {
     }
   }
 
+  const handleEdit = (imgId) => {
+    setEditingImage((images ?? []).find((img) => img.id === imgId) ?? null)
+  }
+
+  const handleEditCurrent = () => {
+    setMenuOpen(false)
+    setEditingImage(image)
+  }
+
+  const handleEditSaved = async (imgId, data) => {
+    const updated = await updateImage(imgId, data)
+    if (imgId === currentId) setImage(updated)
+    return updated
+  }
+
   const recommendationItems = useMemo(
     () =>
       (images ?? [])
@@ -203,6 +261,10 @@ export function ImageDetailPage({ id }) {
           ...imageToMasonryItem(img, ownerNames.get(img.userId)),
           saved: savedIds.has(img.id),
           onToggleSave: user ? toggleSave : undefined,
+          onEdit:
+            user && (user.userId === img.userId || user.role === 'admin')
+              ? handleEdit
+              : undefined,
           canDelete: Boolean(
             user && (user.userId === img.userId || user.role === 'admin'),
           ),
@@ -290,17 +352,30 @@ export function ImageDetailPage({ id }) {
 
   return (
     <main className="container">
-      <p>
-        <Link to="/" className="btn btn-primary">
-          {t('common.backToHome')}
-        </Link>
-      </p>
-
       <section className="detail-hero">
         <div className="detail-image-wrap">
+          <Link
+            to="/"
+            className="detail-back-btn"
+            aria-label={t('common.backToHome')}
+            title={t('common.backToHome')}
+          >
+            <BackIcon />
+          </Link>
           <img className="detail-image" src={imageUrl(image.id)} alt={image.name} />
         </div>
         <div className="detail-meta">
+          {/* Autor primero: avatar + nickname clicleable hacia su perfil. */}
+          {owner ? (
+            <Link to={`/users/${owner.username}`} className="detail-owner">
+              <UserAvatar user={owner} />
+              <span>
+                <strong>{owner.nickname}</strong> <small>@{owner.username}</small>
+              </span>
+            </Link>
+          ) : (
+            <p className="muted">{t('common.userFallback', { id: image.userId })}</p>
+          )}
           <h1>{image.name}</h1>
           {image.category && (
             <p className="detail-category">
@@ -308,10 +383,7 @@ export function ImageDetailPage({ id }) {
             </p>
           )}
           {image.description && <p>{image.description}</p>}
-          <p className="muted">
-            {ownerNames.get(image.userId) ?? t('common.userFallback', { id: image.userId })} ·{' '}
-            {new Date(image.createdAt).toLocaleDateString()}
-          </p>
+          <p className="muted">{new Date(image.createdAt).toLocaleDateString()}</p>
           <div className="image-actions">
             {user && (
               <button
@@ -343,6 +415,12 @@ export function ImageDetailPage({ id }) {
                     {copied ? <CheckIcon /> : <ShareIcon />}
                     {copied ? t('detail.copied') : t('detail.share')}
                   </button>
+                  {canEditCurrent && (
+                    <button type="button" onClick={handleEditCurrent}>
+                      <PencilIcon />
+                      {t('masonry.edit')}
+                    </button>
+                  )}
                   {canDeleteCurrent && (
                     <button
                       type="button"
@@ -373,6 +451,12 @@ export function ImageDetailPage({ id }) {
           />
         )}
       </section>
+
+      <ImageEditDialog
+        image={editingImage}
+        onClose={() => setEditingImage(null)}
+        onSaved={handleEditSaved}
+      />
     </main>
   )
 }

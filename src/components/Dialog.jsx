@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 
-export function Dialog({ open, onClose, title, children }) {
+export function Dialog({ open, onClose, title, children, wide = false }) {
   const { t } = useTranslation()
 
   useEffect(() => {
@@ -23,7 +23,7 @@ export function Dialog({ open, onClose, title, children }) {
   return (
     <div className="dialog-backdrop" onClick={onClose}>
       <div
-        className="dialog"
+        className={`dialog${wide ? ' dialog-wide' : ''}`}
         role="dialog"
         aria-modal="true"
         aria-label={title}

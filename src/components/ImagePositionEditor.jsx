@@ -20,6 +20,9 @@ import { parseImagePosition } from '../utils/imagePosition'
  *   backgroundMode  - true para el banner: el ancho de la imagen es
  *                     siempre z*100% del contenedor y el alto conserva
  *                     el ratio natural (como background-size/position)
+ *   canvasWidth     - ancho fijo del canvas en px (ej. 128 para el avatar);
+ *                     los controles (slider de zoom) ocupan todo el ancho
+ *                     del editor, así el slider queda centrado.
  *   onPositionChange - callback(positionString)
  *   style           - estilo adicional para el contenedor
  */
@@ -29,6 +32,7 @@ export default function ImagePositionEditor({
   aspectRatio = 3,
   circular = false,
   backgroundMode = false,
+  canvasWidth,
   onPositionChange,
   style,
 }) {
@@ -361,7 +365,8 @@ export default function ImagePositionEditor({
         className="imgpos-canvas"
         style={{
           position: 'relative',
-          width: '100%',
+          width: canvasWidth ? `${canvasWidth}px` : '100%',
+          margin: canvasWidth ? '0 auto' : undefined,
           aspectRatio: String(aspectRatio),
           overflow: 'hidden',
           lineHeight: 0,

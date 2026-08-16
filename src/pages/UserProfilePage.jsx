@@ -4,12 +4,14 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { api, ApiError, avatarUrl, bannerUrl } from '../api'
 import { useAuth } from '../auth/AuthContext'
 import { Dialog } from '../components/Dialog'
+import { ImageEditDialog } from '../components/ImageEditDialog'
 import ImagePositionEditor from '../components/ImagePositionEditor'
 import Masonry from '../components/Masonry'
 import { MasonrySkeleton, ProfileSkeleton } from '../components/Skeletons'
 import { UserAvatar } from '../components/UserAvatar'
 import { useFeed } from '../hooks/useFeed'
 import { ensureConnected, onRealtime } from '../realtime/client'
+import { extractDominantColor } from '../utils/colors'
 import { getImageStyle } from '../utils/imagePosition'
 import { imageToMasonryItem } from '../utils/masonry'
 import { readCached, writeCached } from '../utils/cache'
@@ -96,7 +98,7 @@ export function UserProfilePage() {
   const { t } = useTranslation()
   const [params, setParams] = useSearchParams()
   const { user: currentUser, updateUser } = useAuth()
-  const { images: feedImages, users, savedIds, toggleSave, removeImage } = useFeed()
+  const { images: feedImages, users, savedIds, toggleSave, removeImage, updateImage } = useFeed()
 
   // Lazy-init desde la caché: al volver a un perfil ya visitado se muestra al
   // instante y el fetch fresco se hace en segundo plano (stale-while-revalidate).
@@ -116,6 +118,7 @@ export function UserProfilePage() {
   })
 
   const [editing, setEditing] = useState(false)
+  const [editingImage, setEditingImage] = useState(null)
   const [nickname, setNickname] = useState('')
   const [editUsername, setEditUsername] = useState('')
   const [description, setDescription] = useState('')
@@ -130,6 +133,8 @@ export function UserProfilePage() {
   const [saving, setSaving] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   const [copied, setCopied] = useState(false)
+  // Color del anillo del avatar: dominante de la imagen (paleta generadora).
+  const [avatarRingColor, setAvatarRingColor] = useState(null)
   const avatarInputRef = useRef(null)
   const bannerInputRef = useRef(null)
   const profileRef = useRef(null)
@@ -188,6 +193,21 @@ export function UserProfilePage() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [username, t])
+
+  // Extrae el color dominante del avatar para el anillo (con caché por URL).
+  useEffect(() => {
+    let active = true
+    if (user?.avatarUrl && user?.id) {
+      extractDominantColor(avatarUrl(user.id)).then((color) => {
+        if (active && color) setAvatarRingColor(color)
+      })
+    } else {
+      setAvatarRingColor(null)
+    }
+    return () => {
+      active = false
+    }
+  }, [user?.id, user?.avatarUrl])
 
   // Tiempo real: si el perfil que estoy viendo cambia o le borran una imagen,
   // se actualiza sin recargar la página.
@@ -373,6 +393,17 @@ export function UserProfilePage() {
     }
   }
 
+  const handleEdit = (id) => {
+    setEditingImage(profileImages.find((img) => img.id === id) ?? null)
+  }
+
+  // Al editar desde el perfil, actualiza también las imágenes del perfil.
+  const handleEditSaved = async (id, data) => {
+    const updated = await updateImage(id, data)
+    setProfileImages((prev) => prev.map((img) => (img.id === id ? updated : img)))
+    return updated
+  }
+
   const ownerNames = useMemo(
     () => new Map((users ?? []).map((u) => [u.id, u.nickname])),
     [users],
@@ -384,6 +415,10 @@ export function UserProfilePage() {
         ...imageToMasonryItem(img, user?.nickname),
         saved: savedIds.has(img.id),
         onToggleSave: currentUser ? toggleSave : undefined,
+        onEdit:
+          currentUser && (currentUser.userId === img.userId || currentUser.role === 'admin')
+            ? handleEdit
+            : undefined,
         canDelete: Boolean(
           currentUser && (currentUser.userId === img.userId || currentUser.role === 'admin'),
         ),
@@ -401,6 +436,10 @@ export function UserProfilePage() {
           ...imageToMasonryItem(img, ownerNames.get(img.userId)),
           saved: true,
           onToggleSave: toggleSave,
+          onEdit:
+            currentUser && (currentUser.userId === img.userId || currentUser.role === 'admin')
+              ? handleEdit
+              : undefined,
           canDelete: Boolean(
             currentUser && (currentUser.userId === img.userId || currentUser.role === 'admin'),
           ),
@@ -437,7 +476,7 @@ export function UserProfilePage() {
             />
           </div>
         )}
-        <UserAvatar user={user} className="avatar-lg" />
+        <UserAvatar user={user} className="avatar-lg" ringColor={avatarRingColor} />
         <div className="profile-info">
           <h1>
             {user.nickname}
@@ -477,11 +516,12 @@ export function UserProfilePage() {
         </div>
       </section>
 
-      <Dialog open={editing} onClose={() => setEditing(false)} title={t('profile.editProfile')}>
-        <form className="form" onSubmit={handleSave}>
-          {saveError && <p className="error">{saveError}</p>}
+      <Dialog open={editing} onClose={() => setEditing(false)} title={t('profile.editProfile')} wide>
+        <form className="media-editor-grid" onSubmit={handleSave}>
+          {/* Columna izquierda: banner y avatar (editores de posición) */}
+          <div className="media-editor-col">
+            {saveError && <p className="error">{saveError}</p>}
 
-          <div className="media-editor">
             {bannerPreview || user.bannerUrl ? (
               <>
                 <ImagePositionEditor
@@ -521,21 +561,18 @@ export function UserProfilePage() {
               onChange={handleBannerChange}
             />
             {bannerFile && <span className="muted">{bannerFile.name}</span>}
-          </div>
 
-          <div className="media-editor avatar-editor">
             {avatarPreview || user.avatarUrl ? (
               <>
-                <div className="avatar-editor-box">
-                  <ImagePositionEditor
-                    key={avatarPreview ?? avatarUrl(user.id)}
-                    imageUrl={avatarPreview ?? avatarUrl(user.id)}
-                    initialPosition={avatarPosition}
-                    aspectRatio={1}
-                    circular
-                    onPositionChange={setAvatarPosition}
-                  />
-                </div>
+                <ImagePositionEditor
+                  key={avatarPreview ?? avatarUrl(user.id)}
+                  imageUrl={avatarPreview ?? avatarUrl(user.id)}
+                  initialPosition={avatarPosition}
+                  aspectRatio={1}
+                  circular
+                  canvasWidth={128}
+                  onPositionChange={setAvatarPosition}
+                />
                 <button
                   type="button"
                   className="btn btn-glass btn-sm"
@@ -568,52 +605,55 @@ export function UserProfilePage() {
             {avatarFile && <span className="muted">{avatarFile.name}</span>}
           </div>
 
-          <label>
-            {t('profile.nickname')}
-            <input
-              type="text"
-              value={nickname}
-              onChange={(e) => setNickname(e.target.value)}
-              required
-            />
-          </label>
-          <label>
-            {t('profile.username')}
-            <input
-              type="text"
-              value={editUsername}
-              onChange={(e) => setEditUsername(e.target.value.toLowerCase())}
-              pattern="[a-z0-9_]+"
-              aria-invalid={usernameStatus === 'taken' || usernameStatus === 'invalid'}
-              aria-describedby="username-status"
-              required
-            />
-            <span
-              id="username-status"
-              className={`username-status ${usernameStatus}`}
-              role="status"
-            >
-              {usernameStatus === 'checking' && t('profile.usernameChecking')}
-              {usernameStatus === 'available' && t('profile.usernameAvailable')}
-              {usernameStatus === 'taken' && t('profile.usernameTaken')}
-              {usernameStatus === 'invalid' && t('profile.usernameInvalid')}
-            </span>
-          </label>
-          <label>
-            {t('profile.description')}
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              rows={3}
-            />
-          </label>
-          <div style={{ display: 'flex', gap: '0.5rem' }}>
-            <button type="submit" className="btn btn-primary" disabled={saving || usernameBlocked}>
-              {saving ? t('profile.saving') : t('common.save')}
-            </button>
-            <button type="button" className="btn btn-secondary" onClick={() => setEditing(false)}>
-              {t('common.cancel')}
-            </button>
+          {/* Columna derecha: los inputs */}
+          <div className="media-editor-fields">
+            <label>
+              {t('profile.nickname')}
+              <input
+                type="text"
+                value={nickname}
+                onChange={(e) => setNickname(e.target.value)}
+                required
+              />
+            </label>
+            <label>
+              {t('profile.username')}
+              <input
+                type="text"
+                value={editUsername}
+                onChange={(e) => setEditUsername(e.target.value.toLowerCase())}
+                pattern="[a-z0-9_]+"
+                aria-invalid={usernameStatus === 'taken' || usernameStatus === 'invalid'}
+                aria-describedby="username-status"
+                required
+              />
+              <span
+                id="username-status"
+                className={`username-status ${usernameStatus}`}
+                role="status"
+              >
+                {usernameStatus === 'checking' && t('profile.usernameChecking')}
+                {usernameStatus === 'available' && t('profile.usernameAvailable')}
+                {usernameStatus === 'taken' && t('profile.usernameTaken')}
+                {usernameStatus === 'invalid' && t('profile.usernameInvalid')}
+              </span>
+            </label>
+            <label>
+              {t('profile.description')}
+              <textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                rows={4}
+              />
+            </label>
+            <div className="media-editor-actions">
+              <button type="submit" className="btn btn-primary" disabled={saving || usernameBlocked}>
+                {saving ? t('profile.saving') : t('common.save')}
+              </button>
+              <button type="button" className="btn btn-secondary" onClick={() => setEditing(false)}>
+                {t('common.cancel')}
+              </button>
+            </div>
           </div>
         </form>
       </Dialog>
@@ -674,6 +714,11 @@ export function UserProfilePage() {
           )}
         </section>
       )}
+      <ImageEditDialog
+        image={editingImage}
+        onClose={() => setEditingImage(null)}
+        onSaved={handleEditSaved}
+      />
     </main>
   )
 }

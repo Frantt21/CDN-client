@@ -1,7 +1,8 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
+import { ImageEditDialog } from '../components/ImageEditDialog'
 import Masonry from '../components/Masonry'
 import { MasonrySkeleton } from '../components/Skeletons'
 import { useFeed } from '../hooks/useFeed'
@@ -11,7 +12,8 @@ export function HomePage() {
   const { user } = useAuth()
   const { t } = useTranslation()
   const navigate = useNavigate()
-  const { images, users, loading, error, removeImage, savedIds, toggleSave } = useFeed()
+  const { images, users, loading, error, removeImage, updateImage, savedIds, toggleSave } = useFeed()
+  const [editingImage, setEditingImage] = useState(null)
 
   const handleDelete = async (id) => {
     try {
@@ -19,6 +21,10 @@ export function HomePage() {
     } catch (err) {
       alert(err instanceof Error ? err.message : t('feed.deleteError'))
     }
+  }
+
+  const handleEdit = (id) => {
+    setEditingImage((images ?? []).find((img) => img.id === id) ?? null)
   }
 
   const ownerNames = useMemo(
@@ -32,6 +38,10 @@ export function HomePage() {
         ...imageToMasonryItem(img, ownerNames.get(img.userId)),
         saved: savedIds.has(img.id),
         onToggleSave: user ? toggleSave : undefined,
+        onEdit:
+          user && (user.userId === img.userId || user.role === 'admin')
+            ? handleEdit
+            : undefined,
         canDelete: Boolean(user && (user.userId === img.userId || user.role === 'admin')),
         onDelete: user ? handleDelete : undefined,
       })),
@@ -55,6 +65,11 @@ export function HomePage() {
           onItemClick={(item) => navigate(`/images/${item.id}`)}
         />
       )}
+      <ImageEditDialog
+        image={editingImage}
+        onClose={() => setEditingImage(null)}
+        onSaved={updateImage}
+      />
     </main>
   )
 }

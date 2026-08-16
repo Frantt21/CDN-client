@@ -158,7 +158,13 @@ export default {
     moreOptions: 'More options',
     save: 'Save',
     saved: 'Saved',
+    edit: 'Edit',
     delete: 'Delete',
+  },
+
+  editImage: {
+    title: 'Edit image',
+    saveError: 'Error saving changes',
   },
 
   feed: {
