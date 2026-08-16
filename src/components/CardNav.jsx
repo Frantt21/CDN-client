@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate } from 'react-router-dom';
 import { gsap } from 'gsap';
@@ -45,9 +45,14 @@ const CardNav = ({
   const { user } = useAuth();
   const [isHamburgerOpen, setIsHamburgerOpen] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [avatarFailed, setAvatarFailed] = useState(false);
   const navRef = useRef(null);
   const cardsRef = useRef([]);
   const tlRef = useRef(null);
+
+  useEffect(() => {
+    setAvatarFailed(false);
+  }, [user?.userId, user?.avatarUrl]);
 
   const calculateHeight = () => {
     const navEl = navRef.current;
@@ -211,8 +216,12 @@ const CardNav = ({
                 aria-label={t('nav.profile')}
                 title={user.nickname}
               >
-                {user.avatarUrl ? (
-                  <img src={avatarUrl(user.id)} alt="" />
+                {user.avatarUrl && !avatarFailed ? (
+                  <img
+                    src={avatarUrl(user.userId)}
+                    alt=""
+                    onError={() => setAvatarFailed(true)}
+                  />
                 ) : (
                   <span className="card-nav-avatar-initial">
                     {user.nickname[0]?.toUpperCase()}

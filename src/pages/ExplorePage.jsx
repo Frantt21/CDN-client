@@ -1,23 +1,12 @@
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
-import { avatarUrl } from '../api'
 import { useAuth } from '../auth/AuthContext'
 import Masonry from '../components/Masonry'
 import { MasonrySkeleton } from '../components/Skeletons'
+import { UserAvatar } from '../components/UserAvatar'
 import { useFeed } from '../hooks/useFeed'
 import { imageToMasonryItem } from '../utils/masonry'
-
-function Avatar({ user, size = 'avatar' }) {
-  if (user.avatarUrl) {
-    return (
-      <span className={`${size} avatar-img`}>
-        <img src={avatarUrl(user.id)} alt="" loading="lazy" />
-      </span>
-    )
-  }
-  return <span className={size}>{user.nickname[0]?.toUpperCase()}</span>
-}
 
 export function ExplorePage() {
   const { user } = useAuth()
@@ -115,7 +104,7 @@ export function ExplorePage() {
               {(users ?? []).map((u) => (
                 <li key={u.id}>
                   <Link to={`/users/${u.username}`} className="user-chip">
-                    <Avatar user={u} />
+                    <UserAvatar user={u} />
                     <span>
                       <strong>{u.nickname}</strong> <small>@{u.username}</small>
                     </span>

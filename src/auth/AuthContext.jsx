@@ -1,5 +1,12 @@
-import { createContext, useContext, useState } from 'react'
-import { api, getStoredUser, getToken, setStoredUser, setToken } from '../api'
+import { createContext, useContext, useEffect, useState } from 'react'
+import {
+  api,
+  getStoredUser,
+  getToken,
+  setRefreshToken,
+  setStoredUser,
+  setToken,
+} from '../api'
 
 const AuthContext = createContext(null)
 
@@ -8,8 +15,16 @@ export function AuthProvider({ children }) {
     getToken() ? getStoredUser() : null,
   )
 
+  const clearSession = () => {
+    setToken(null)
+    setRefreshToken(null)
+    setStoredUser(null)
+    setUser(null)
+  }
+
   const persist = (res) => {
     setToken(res.token)
+    setRefreshToken(res.refreshToken)
     setStoredUser(res)
     setUser(res)
   }
@@ -23,9 +38,7 @@ export function AuthProvider({ children }) {
   }
 
   const logout = () => {
-    setToken(null)
-    setStoredUser(null)
-    setUser(null)
+    clearSession()
   }
 
   const updateUser = (partial) => {
@@ -36,6 +49,12 @@ export function AuthProvider({ children }) {
       return updated
     })
   }
+
+  useEffect(() => {
+    const onExpired = () => clearSession()
+    window.addEventListener('cdn:auth:expired', onExpired)
+    return () => window.removeEventListener('cdn:auth:expired', onExpired)
+  }, [])
 
   return (
     <AuthContext.Provider value={{ user, login, register, logout, updateUser }}>

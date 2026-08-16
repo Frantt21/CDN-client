@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
-import { api, ApiError, avatarUrl } from '../api'
+import { api, ApiError } from '../api'
 import { useAuth } from '../auth/AuthContext'
 import { Dialog } from '../components/Dialog'
 import Masonry from '../components/Masonry'
 import { ProfileSkeleton } from '../components/Skeletons'
+import { UserAvatar } from '../components/UserAvatar'
 import { useFeed } from '../hooks/useFeed'
 import { imageToMasonryItem } from '../utils/masonry'
 import { readCached, writeCached } from '../utils/cache'
@@ -13,17 +14,6 @@ import { readCached, writeCached } from '../utils/cache'
 const PROFILE_TTL_MS = 5 * 60 * 1000
 const profileCacheKey = (username) => `cdn_profile_${username}`
 const profileImagesCacheKey = (id) => `cdn_profile_images_${id}`
-
-function Avatar({ user }) {
-  if (user.avatarUrl) {
-    return (
-      <span className="avatar avatar-lg avatar-img">
-        <img src={avatarUrl(user.id)} alt="" />
-      </span>
-    )
-  }
-  return <span className="avatar avatar-lg">{user.nickname[0]?.toUpperCase()}</span>
-}
 
 export function UserProfilePage() {
   const { username = '' } = useParams()
@@ -197,7 +187,7 @@ export function UserProfilePage() {
   return (
     <main className="container">
       <section className="profile">
-        <Avatar user={user} />
+        <UserAvatar user={user} className="avatar-lg" />
         <div>
           <h1>
             {user.nickname}

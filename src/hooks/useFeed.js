@@ -8,7 +8,7 @@ const POLL_INTERVAL_MS = 15_000
 const SAVED_TTL_MS = 7 * 24 * 60 * 60 * 1000
 
 function savedCacheKey() {
-  const id = getStoredUser()?.id
+  const id = getStoredUser()?.userId
   return `cdn_saved_${id ?? 'anon'}`
 }
 

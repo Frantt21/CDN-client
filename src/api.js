@@ -1,6 +1,8 @@
 const API_BASE = '/api'
 const TOKEN_KEY = 'cdn_token'
 const USER_KEY = 'cdn_user'
+const REFRESH_TOKEN_KEY = 'cdn_refresh_token'
+const AUTH_EXPIRED_EVENT = 'cdn:auth:expired'
 
 export class ApiError extends Error {
   constructor(status, message) {
@@ -16,6 +18,15 @@ export function getToken() {
 export function setToken(token) {
   if (token) localStorage.setItem(TOKEN_KEY, token)
   else localStorage.removeItem(TOKEN_KEY)
+}
+
+export function getRefreshToken() {
+  return localStorage.getItem(REFRESH_TOKEN_KEY)
+}
+
+export function setRefreshToken(token) {
+  if (token) localStorage.setItem(REFRESH_TOKEN_KEY, token)
+  else localStorage.removeItem(REFRESH_TOKEN_KEY)
 }
 
 export function getStoredUser() {
@@ -48,7 +59,7 @@ export function imageDownloadUrl(id) {
   return `${API_BASE}/images/${id}/download?download=true`
 }
 
-async function request(path, options = {}, authenticated = false) {
+async function performRequest(path, options, authenticated) {
   const headers = {}
   if (options.body && !(options.body instanceof FormData)) {
     headers['Content-Type'] = 'application/json'
@@ -57,20 +68,86 @@ async function request(path, options = {}, authenticated = false) {
     const token = getToken()
     if (token) headers['Authorization'] = `Bearer ${token}`
   }
+  return fetch(`${API_BASE}${path}`, { ...options, headers })
+}
 
-  const res = await fetch(`${API_BASE}${path}`, { ...options, headers })
+async function errorMessage(res) {
+  try {
+    const data = await res.json()
+    if (data?.error) return data.error
+  } catch {
+    // cuerpo sin JSON
+  }
+  return `Error ${res.status}`
+}
 
-  if (!res.ok) {
-    let message = `Error ${res.status}`
-    try {
-      const data = await res.json()
-      if (data?.error) message = data.error
-    } catch {
-      // cuerpo sin JSON
+let refreshPromise = null
+
+/** Renueva la sesión con el refresh token (una sola petición en vuelo). */
+async function tryRefreshSession() {
+  if (refreshPromise) return refreshPromise
+
+  const refreshToken = getRefreshToken()
+  if (!refreshToken) throw new Error('no refresh token')
+
+  refreshPromise = (async () => {
+    const res = await fetch(`${API_BASE}/auth/refresh`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refreshToken }),
+    })
+    if (!res.ok) throw new Error(await errorMessage(res))
+
+    const data = await res.json()
+    setToken(data.token)
+    setRefreshToken(data.refreshToken)
+
+    const stored = getStoredUser()
+    if (stored) {
+      setStoredUser({
+        ...stored,
+        nickname: data.nickname,
+        username: data.username,
+        role: data.role,
+        ...(data.avatarUrl ? { avatarUrl: data.avatarUrl } : {}),
+      })
     }
-    throw new ApiError(res.status, message)
+    return data
+  })()
+
+  try {
+    return await refreshPromise
+  } finally {
+    refreshPromise = null
+  }
+}
+
+function notifySessionExpired() {
+  window.dispatchEvent(new CustomEvent(AUTH_EXPIRED_EVENT))
+}
+
+async function request(path, options = {}, authenticated = false) {
+  const isAuthRoute =
+    path === '/auth/login' || path === '/auth/register' || path === '/auth/refresh'
+
+  const res = await performRequest(path, options, authenticated)
+
+  if (res.status === 401 && authenticated && !isAuthRoute) {
+    try {
+      await tryRefreshSession()
+      const retry = await performRequest(path, options, true)
+      if (!retry.ok) throw new ApiError(retry.status, await errorMessage(retry))
+      if (retry.status === 204) return undefined
+      return await retry.json()
+    } catch {
+      setToken(null)
+      setRefreshToken(null)
+      notifySessionExpired()
+      throw new ApiError(401, 'La sesión expiró. Volvé a iniciar sesión.')
+    }
   }
 
+  if (!res.ok) throw new ApiError(res.status, await errorMessage(res))
   if (res.status === 204) return undefined
   return await res.json()
 }
