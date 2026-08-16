@@ -73,7 +73,7 @@ src/
 |---|---|
 | `/` | Feed: galería pública |
 | `/explore` | Explorar: imágenes / usuarios + búsqueda |
-| `/users/:username` | Perfil de usuario (tabs feed/guardados, edición si es el propio) |
+| `/users/:username` | Perfil (banner de fondo, avatar, tabs feed/guardados, edición y copiar URL) |
 | `/images/:id` | Detalle de imagen + recomendaciones |
 | `/upload` | Subir imagen (requiere sesión) |
 | `/settings` | Ajustes (requiere sesión) |
@@ -101,6 +101,7 @@ src/
 ## Notas
 
 - La sesión se guarda en `localStorage` (`cdn_token`, `cdn_user`, `cdn_refresh_token`) y se renueva automáticamente con el refresh token (una petición en vuelo).
+- **Perfil**: el usuario puede subir avatar y **banner** (fondo de la sección); el menú de tres puntos permite copiar la URL del perfil.
 - **Borrar** una imagen: solo el dueño o un usuario con rol `admin`.
 - Los usuarios admin ven el badge `admin` y pueden borrar imágenes ajenas.
 - Idioma: español e inglés (`i18n`), con selector en Ajustes.

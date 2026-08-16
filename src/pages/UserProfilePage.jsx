@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
-import { api, ApiError, avatarUrl } from '../api'
+import { api, ApiError, avatarUrl, bannerUrl } from '../api'
 import { useAuth } from '../auth/AuthContext'
 import { Dialog } from '../components/Dialog'
 import Masonry from '../components/Masonry'
@@ -35,22 +35,55 @@ function PencilIcon() {
   )
 }
 
-function ImageIcon() {
+function ThreeDotsIcon() {
   return (
     <svg
       aria-hidden="true"
       viewBox="0 0 24 24"
-      width="15"
-      height="15"
+      width="18"
+      height="18"
+      fill="currentColor"
+    >
+      <circle cx="12" cy="5" r="1.7" />
+      <circle cx="12" cy="12" r="1.7" />
+      <circle cx="12" cy="19" r="1.7" />
+    </svg>
+  )
+}
+
+function LinkIcon() {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 24 24"
+      width="14"
+      height="14"
       fill="none"
       stroke="currentColor"
       strokeWidth="2"
       strokeLinecap="round"
       strokeLinejoin="round"
     >
-      <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-      <circle cx="8.5" cy="8.5" r="1.5" />
-      <path d="M21 15l-5-5L5 21" />
+      <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+      <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+    </svg>
+  )
+}
+
+function CheckIcon() {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 24 24"
+      width="14"
+      height="14"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M20 6L9 17l-5-5" />
     </svg>
   )
 }
@@ -86,10 +119,15 @@ export function UserProfilePage() {
   const [description, setDescription] = useState('')
   const [avatarFile, setAvatarFile] = useState(null)
   const [avatarPreview, setAvatarPreview] = useState(null)
+  const [bannerFile, setBannerFile] = useState(null)
+  const [bannerPreview, setBannerPreview] = useState(null)
   const [usernameStatus, setUsernameStatus] = useState('idle') // idle | checking | available | taken | invalid
   const [saveError, setSaveError] = useState(null)
   const [saving, setSaving] = useState(false)
+  const [menuOpen, setMenuOpen] = useState(false)
+  const [copied, setCopied] = useState(false)
   const avatarInputRef = useRef(null)
+  const bannerInputRef = useRef(null)
 
   const isOwnProfile = currentUser?.userId === user?.id
   const tab = params.get('tab') === 'saved' ? 'saved' : 'feed'
@@ -152,16 +190,36 @@ export function UserProfilePage() {
     }
   }, [username])
 
-  // Libera el object URL del preview al cambiar de archivo, cerrar el diálogo o desmontar.
+  // Libera los object URLs de los previews al cambiar de archivo, cerrar el diálogo o desmontar.
   useEffect(() => {
-    if (avatarPreview && !editing) {
-      URL.revokeObjectURL(avatarPreview)
+    if (!editing && (avatarPreview || bannerPreview)) {
+      if (avatarPreview) URL.revokeObjectURL(avatarPreview)
+      if (bannerPreview) URL.revokeObjectURL(bannerPreview)
       setAvatarPreview(null)
+      setBannerPreview(null)
     }
     return () => {
       if (avatarPreview) URL.revokeObjectURL(avatarPreview)
+      if (bannerPreview) URL.revokeObjectURL(bannerPreview)
     }
-  }, [avatarPreview, editing])
+  }, [avatarPreview, bannerPreview, editing])
+
+  // Cierra el dropdown de opciones al hacer clic fuera o con Escape.
+  useEffect(() => {
+    if (!menuOpen) return
+    const onKey = (e) => {
+      if (e.key === 'Escape') setMenuOpen(false)
+    }
+    const onDown = (e) => {
+      if (!e.target.closest('[data-menu]')) setMenuOpen(false)
+    }
+    document.addEventListener('keydown', onKey)
+    document.addEventListener('mousedown', onDown)
+    return () => {
+      document.removeEventListener('keydown', onKey)
+      document.removeEventListener('mousedown', onDown)
+    }
+  }, [menuOpen])
 
   // Disponibilidad del username en vivo (debounce) antes de guardar.
   useEffect(() => {
@@ -198,6 +256,8 @@ export function UserProfilePage() {
     setDescription(user.description ?? '')
     setAvatarFile(null)
     setAvatarPreview(null)
+    setBannerFile(null)
+    setBannerPreview(null)
     setUsernameStatus('idle')
     setSaveError(null)
     setEditing(true)
@@ -207,6 +267,31 @@ export function UserProfilePage() {
     const file = e.target.files?.[0] ?? null
     setAvatarFile(file)
     setAvatarPreview(file ? URL.createObjectURL(file) : null)
+  }
+
+  const handleBannerChange = (e) => {
+    const file = e.target.files?.[0] ?? null
+    setBannerFile(file)
+    setBannerPreview(file ? URL.createObjectURL(file) : null)
+  }
+
+  const handleCopyUrl = async () => {
+    const url = `${window.location.origin}/users/${user.username}`
+    try {
+      await navigator.clipboard.writeText(url)
+    } catch {
+      const ta = document.createElement('textarea')
+      ta.value = url
+      ta.style.position = 'fixed'
+      ta.style.opacity = '0'
+      document.body.appendChild(ta)
+      ta.select()
+      document.execCommand('copy')
+      ta.remove()
+    }
+    setMenuOpen(false)
+    setCopied(true)
+    window.setTimeout(() => setCopied(false), 2000)
   }
 
   const handleSave = async (e) => {
@@ -224,11 +309,15 @@ export function UserProfilePage() {
       if (avatarFile) {
         next = await api.updateAvatar(user.id, avatarFile)
       }
+      if (bannerFile) {
+        next = await api.updateBanner(user.id, bannerFile)
+      }
       setUser(next)
       updateUser({
         nickname: next.nickname,
         username: next.username,
         ...(next.avatarUrl ? { avatarUrl: next.avatarUrl } : {}),
+        ...(next.bannerUrl ? { bannerUrl: next.bannerUrl } : {}),
       })
       setEditing(false)
       // Guarda el perfil actualizado bajo su clave (nueva si cambió el username)
@@ -305,34 +394,82 @@ export function UserProfilePage() {
 
   return (
     <main className="container">
-      <section className="profile">
+      <section
+        className={`profile${user.bannerUrl ? ' has-banner' : ''}`}
+        style={user.bannerUrl ? { backgroundImage: `url(${bannerUrl(user.id)})` } : undefined}
+      >
         <UserAvatar user={user} className="avatar-lg" />
-        <div>
+        <div className="profile-info">
           <h1>
             {user.nickname}
             {user.role === 'admin' && <span className="role-badge">{t('profile.admin')}</span>}
           </h1>
           <p className="muted">
-            @{user.username} · {t('profile.since', { date: new Date(user.createdAt).toLocaleDateString() })}
+            @{user.username} · {t('profile.since', { date: new Date(user.createdAt).toLocaleDateString() })} ·{' '}
+            {t('profile.imagesCount', { count: profileImages.length })}
           </p>
-          {user.description && <p>{user.description}</p>}
-          <div className="profile-stats">
-            <span className="stat">
-              <ImageIcon />
-              {t('profile.imagesCount', { count: profileImages.length })}
-            </span>
+          {user.description && <p className="profile-description">{user.description}</p>}
+          <div className="profile-actions">
+            {isOwnProfile && (
+              <button type="button" className="btn btn-secondary" onClick={startEditing}>
+                {t('profile.editProfile')}
+              </button>
+            )}
+            <div className="masonry-menu" data-menu>
+              <button
+                type="button"
+                className="masonry-menu-toggle"
+                aria-label={t('profile.moreOptions')}
+                aria-expanded={menuOpen}
+                onClick={() => setMenuOpen((prev) => !prev)}
+              >
+                <ThreeDotsIcon />
+              </button>
+              {menuOpen && (
+                <div className="masonry-dropdown">
+                  <button type="button" onClick={handleCopyUrl}>
+                    {copied ? <CheckIcon /> : <LinkIcon />}
+                    {copied ? t('profile.urlCopied') : t('profile.copyUrl')}
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
-          {isOwnProfile && (
-            <button type="button" className="btn btn-secondary" onClick={startEditing}>
-              {t('profile.editProfile')}
-            </button>
-          )}
         </div>
       </section>
 
       <Dialog open={editing} onClose={() => setEditing(false)} title={t('profile.editProfile')}>
         <form className="form" onSubmit={handleSave}>
           {saveError && <p className="error">{saveError}</p>}
+
+          <div className="banner-picker">
+            <button
+              type="button"
+              className="banner-picker-btn"
+              aria-label={t('profile.changeBanner')}
+              title={t('profile.changeBanner')}
+              onClick={() => bannerInputRef.current?.click()}
+            >
+              {bannerPreview ? (
+                <img src={bannerPreview} alt="" />
+              ) : user.bannerUrl ? (
+                <img src={bannerUrl(user.id)} alt="" />
+              ) : (
+                <span className="banner-picker-placeholder">{t('profile.banner')}</span>
+              )}
+              <span className="avatar-picker-overlay" aria-hidden="true">
+                <PencilIcon />
+              </span>
+            </button>
+            <input
+              ref={bannerInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/gif,image/webp"
+              className="visually-hidden"
+              onChange={handleBannerChange}
+            />
+            {bannerFile && <span className="muted">{bannerFile.name}</span>}
+          </div>
 
           <div className="avatar-picker">
             <button

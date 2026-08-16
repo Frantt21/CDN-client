@@ -59,6 +59,11 @@ export function avatarUrl(id) {
   return `${API_BASE}/users/${id}/avatar`
 }
 
+/** URL del banner de un usuario (fondo del perfil). */
+export function bannerUrl(id) {
+  return `${API_BASE}/users/${id}/banner`
+}
+
 /** URL de descarga (attachment) de una imagen. */
 export function imageDownloadUrl(id) {
   return `${API_BASE}/images/${id}/download?download=true`
@@ -181,6 +186,12 @@ export const api = {
     const form = new FormData()
     form.append('file', file)
     return request(`/users/${id}/avatar`, { method: 'POST', body: form }, true)
+  },
+
+  updateBanner: (id, file) => {
+    const form = new FormData()
+    form.append('file', file)
+    return request(`/users/${id}/banner`, { method: 'POST', body: form }, true)
   },
 
   getImages: (userId) =>

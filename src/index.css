@@ -84,13 +84,65 @@ h2 {
 }
 
 .profile {
+  position: relative;
   display: flex;
   align-items: center;
-  gap: 1.25rem;
-  padding: 1rem;
+  gap: 1.5rem;
+  padding: 1.5rem;
   background: var(--color-surface);
   border-radius: var(--radius);
   box-shadow: 0 6px 24px rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+}
+
+/* Con banner: la sección usa la imagen como fondo con un overlay oscuro
+   para mantener legible el contenido por encima. */
+.profile.has-banner {
+  background-size: cover;
+  background-position: center center;
+}
+
+.profile.has-banner::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, rgba(10, 9, 8, 0.35), rgba(10, 9, 8, 0.82));
+}
+
+.profile > * {
+  position: relative;
+  z-index: 1;
+}
+
+.profile-info {
+  min-width: 0;
+  flex: 1;
+}
+
+.profile-description {
+  margin: 0.35rem 0 0;
+  max-width: 56ch;
+}
+
+.profile-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.85rem;
+}
+
+/* El dropdown de opciones del perfil reusa el estilo del masonry pero
+   en posición estática dentro de la fila de acciones. */
+.profile-actions .masonry-menu {
+  position: relative;
+  top: auto;
+  right: auto;
+}
+
+.profile-actions .masonry-dropdown {
+  top: calc(100% + 6px);
+  right: 0;
+  left: auto;
 }
 
 /* Botones */
@@ -322,9 +374,14 @@ select:focus {
 }
 
 .avatar-lg {
-  width: 96px;
-  height: 96px;
-  font-size: 2.2rem;
+  width: 128px;
+  height: 128px;
+  font-size: 2.8rem;
+}
+
+.profile .avatar-lg {
+  border: 4px solid rgba(242, 244, 243, 0.28);
+  flex-shrink: 0;
 }
 
 .avatar-img {
@@ -716,27 +773,47 @@ select:focus {
   padding: 0;
 }
 
-/* ===== Perfil: stats ===== */
-.profile-stats {
+/* ===== Selector de banner en el diálogo ===== */
+.banner-picker {
   display: flex;
-  gap: 0.5rem;
-  margin: 0.6rem 0 0.85rem;
-}
-
-.profile-stats .stat {
-  display: inline-flex;
+  flex-direction: column;
   align-items: center;
-  gap: 0.4rem;
-  font-size: 0.85rem;
-  color: var(--color-text-muted);
-  background: var(--color-surface-raised);
-  border: 1px solid var(--color-glass-border);
-  border-radius: 999px;
-  padding: 0.3rem 0.8rem;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
 }
 
-.profile-stats .stat svg {
-  color: var(--wine-tint);
+.banner-picker-btn {
+  position: relative;
+  width: 100%;
+  height: 120px;
+  padding: 0;
+  border: 2px dashed var(--color-glass-border);
+  border-radius: var(--radius);
+  background: var(--color-surface-raised);
+  overflow: hidden;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.2s ease;
+}
+
+.banner-picker-btn:hover,
+.banner-picker-btn:focus-visible {
+  border-color: var(--wine-tint);
+}
+
+.banner-picker-btn img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.banner-picker-placeholder {
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+  font-weight: 600;
 }
 
 /* ===== Selector de avatar en el diálogo ===== */
