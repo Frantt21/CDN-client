@@ -17,9 +17,9 @@
   animation: masonryIn 0.4s ease;
 }
 
-/* El fondo de color (dominante del thumbnail) SOLO aparece en hover:
-   la imagen hace zoom out (scale 0.95) y el fondo queda fijo alrededor;
-   al salir, zoom in y el fondo se va. */
+/* El acento (color dominante del thumbnail) SOLO aparece en hover, como
+   fondo DETRÁS de la imagen: el padding de 6px deja ver el color alrededor.
+   La imagen no se escala ni se mueve: su tamaño es siempre el mismo. */
 .item-wrapper:hover {
   background: var(--item-color, transparent);
   z-index: 2;
@@ -41,12 +41,6 @@
   border-radius: 10px;
   box-shadow: 0 10px 50px -10px rgba(0, 0, 0, 0.25);
   overflow: hidden;
-  will-change: transform;
-  transition: transform 0.3s ease;
-}
-
-.item-wrapper:hover > .item-img {
-  transform: scale(var(--hover-scale, 0.95));
 }
 
 /* <img> con lazy loading nativo: el navegador carga solo las que están

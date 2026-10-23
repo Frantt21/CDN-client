@@ -106,7 +106,7 @@ function TrashIcon() {
  * renders), así el layout no depende del ancho medido del contenedor y
  * las cards nunca "desaparecen" al alternar tabs o re-renderizar.
  */
-const Masonry = ({ items, scaleOnHover = true, hoverScale = 0.95, onItemClick }) => {
+const Masonry = ({ items, onItemClick }) => {
   const { t } = useTranslation()
   const columns = useMedia(
     ['(min-width:1500px)', '(min-width:1000px)', '(min-width:600px)', '(min-width:400px)'],
@@ -159,7 +159,6 @@ const Masonry = ({ items, scaleOnHover = true, hoverScale = 0.95, onItemClick })
             key={item.id}
             className="item-wrapper"
             style={{
-              '--hover-scale': scaleOnHover ? hoverScale : 1,
               '--item-color': cardColors[item.id],
               gridRowEnd: `span ${span}`,
             }}
