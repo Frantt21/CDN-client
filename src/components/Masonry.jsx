@@ -183,71 +183,73 @@ const Masonry = ({ items, onItemClick }) => {
                   )}
                   {item.ownerName && <span className="item-owner">{item.ownerName}</span>}
                 </div>
+              </div>
+            </div>
 
-                {hasActions && (
-                  <div className="masonry-menu" data-menu>
-                    <button
-                      type="button"
-                      className="masonry-menu-toggle"
-                      aria-label={t('masonry.moreOptions')}
-                      aria-expanded={openMenuId === item.id}
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        toggleMenu(item.id)
-                      }}
-                    >
-                      <ThreeDotsIcon />
-                    </button>
+            {/* Fuera de .item-img (que recorta con overflow: hidden) para
+                que el dropdown no se corte contra el borde de la card. */}
+            {hasActions && (
+              <div className="masonry-menu" data-menu>
+                <button
+                  type="button"
+                  className="masonry-menu-toggle"
+                  aria-label={t('masonry.moreOptions')}
+                  aria-expanded={openMenuId === item.id}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    toggleMenu(item.id)
+                  }}
+                >
+                  <ThreeDotsIcon />
+                </button>
 
-                    {openMenuId === item.id && (
-                      <div className="masonry-dropdown">
-                        {item.onToggleSave && (
-                          <button
-                            type="button"
-                            className={item.saved ? 'active' : ''}
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              setOpenMenuId(null)
-                              item.onToggleSave(item.id)
-                            }}
-                          >
-                            <BookmarkIcon />
-                            {item.saved ? t('masonry.saved') : t('masonry.save')}
-                          </button>
-                        )}
-                        {item.onEdit && (
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              setOpenMenuId(null)
-                              item.onEdit(item.id)
-                            }}
-                          >
-                            <PencilIcon />
-                            {t('masonry.edit')}
-                          </button>
-                        )}
-                        {item.canDelete && item.onDelete && (
-                          <button
-                            type="button"
-                            className="danger"
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              setOpenMenuId(null)
-                              item.onDelete(item.id)
-                            }}
-                          >
-                            <TrashIcon />
-                            {t('masonry.delete')}
-                          </button>
-                        )}
-                      </div>
+                {openMenuId === item.id && (
+                  <div className="masonry-dropdown">
+                    {item.onToggleSave && (
+                      <button
+                        type="button"
+                        className={item.saved ? 'active' : ''}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setOpenMenuId(null)
+                          item.onToggleSave(item.id)
+                        }}
+                      >
+                        <BookmarkIcon />
+                        {item.saved ? t('masonry.saved') : t('masonry.save')}
+                      </button>
+                    )}
+                    {item.onEdit && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setOpenMenuId(null)
+                          item.onEdit(item.id)
+                        }}
+                      >
+                        <PencilIcon />
+                        {t('masonry.edit')}
+                      </button>
+                    )}
+                    {item.canDelete && item.onDelete && (
+                      <button
+                        type="button"
+                        className="danger"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setOpenMenuId(null)
+                          item.onDelete(item.id)
+                        }}
+                      >
+                        <TrashIcon />
+                        {t('masonry.delete')}
+                      </button>
                     )}
                   </div>
                 )}
               </div>
-            </div>
+            )}
           </div>
         )
       })}

@@ -107,11 +107,23 @@
   letter-spacing: 0.04em;
 }
 
-/* ===== Menú de 3 puntos ===== */
+/* ===== Menú de 3 puntos =====
+   Vive fuera de .item-img (que tiene overflow: hidden) y se posiciona
+   contra .item-wrapper, así el dropdown puede desplegarse fuera del borde
+   de la card sin que se corte. */
 .masonry-menu {
   position: absolute;
-  top: 8px;
-  right: 8px;
+  top: 14px; /* 6px de padding del wrapper + 8px dentro de la imagen */
+  right: 14px;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+
+/* Ya no hereda el fundido de .item-overlay, así que tiene el suyo
+   y se mantiene visible mientras el botón o el dropdown tengan el foco. */
+.item-wrapper:hover .masonry-menu,
+.masonry-menu:focus-within {
+  opacity: 1;
 }
 
 .masonry-menu-toggle {
