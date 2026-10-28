@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { parseImagePosition } from '../utils/imagePosition'
+import { HiArrowRight, HiArrowDown } from 'react-icons/hi'
 
 /**
  * ImagePositionEditor
@@ -403,9 +404,7 @@ export default function ImagePositionEditor({
       </div>
 
       <div className="imgpos-controls" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-        <svg className="imgpos-icon" viewBox="0 0 16 16" aria-hidden="true">
-          <path d="M3 8h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-        </svg>
+        <HiArrowRight className="imgpos-icon" />
         <input
           type="range"
           min={MIN_ZOOM}
@@ -418,9 +417,7 @@ export default function ImagePositionEditor({
           className="imgpos-range"
           style={{ flex: 1 }}
         />
-        <svg className="imgpos-icon" viewBox="0 0 16 16" aria-hidden="true">
-          <path d="M8 3v10M3 8h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-        </svg>
+        <HiArrowDown className="imgpos-icon" />
         <span className="imgpos-value" style={{ minWidth: 36, fontSize: '0.75rem', opacity: 0.7 }}>
           {zoom.toFixed(1)}x
         </span>

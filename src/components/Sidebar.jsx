@@ -3,45 +3,17 @@ import { useTranslation } from 'react-i18next'
 import { Link, NavLink } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
 import { UserAvatar } from './UserAvatar'
+import {
+  FiHome,
+  FiSearch,
+  FiUpload,
+  FiSettings,
+  FiMenu,
+} from 'react-icons/fi'
 import './Sidebar.css'
 
-function Icon({ d, size = 18 }) {
-  return (
-    <svg
-      aria-hidden="true"
-      viewBox="0 0 24 24"
-      width={size}
-      height={size}
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.8"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      {d}
-    </svg>
-  )
-}
-
-const houseIcon = (
-  <Icon
-    d={
-      <>
-        <path d="M3 10.5 12 3l9 7.5" />
-        <path d="M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5" />
-      </>
-    }
-  />
-)
-const exploreIcon = <Icon d={<><circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3" /></>} />
-const uploadIcon = <Icon d={<><path d="M12 16V4" /><path d="m6 10 6-6 6 6" /><path d="M4 20h16" /></>} />
-const settingsIcon = <Icon d={<><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1 1.55V21a2 2 0 1 1-4 0v-.09a1.7 1.7 0 0 0-1-1.55 1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.7 1.7 0 0 0 .34-1.87 1.7 1.7 0 0 0-1.55-1H3a2 2 0 1 1 0-4h.09a1.7 1.7 0 0 0 1.55-1 1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.7 1.7 0 0 0 1.87.34h.09a1.7 1.7 0 0 0 1-1.55V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1 1.55 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.7 1.7 0 0 0-.34 1.87v.09a1.7 1.7 0 0 0 1.55 1H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.55 1z" /></>} />
-const menuIcon = <Icon d={<><path d="M4 6h16" /><path d="M4 12h16" /><path d="M4 18h16" /></>} />
-const collapseIcon = <Icon d={<path d="m15 6-6 6 6 6" />} />
-const expandIcon = <Icon d={<path d="m9 6 6 6-6 6" />} />
-
-/** Sidebar flotante a la izquierda, colapsable a íconos. */
-export default function Sidebar({ collapsed, onToggleCollapse }) {
+/** Sidebar flotante a la izquierda, siempre colapsado a íconos. */
+export default function Sidebar() {
   const { t } = useTranslation()
   const { user } = useAuth()
   const [open, setOpen] = useState(false)
@@ -66,24 +38,16 @@ export default function Sidebar({ collapsed, onToggleCollapse }) {
         aria-expanded={open}
         onClick={() => setOpen((prev) => !prev)}
       >
-        {menuIcon}
+        <FiMenu />
       </button>
 
       {open && <div className="sidebar-backdrop" onClick={close} />}
 
-      <aside className={`sidebar${open ? ' open' : ''}${collapsed ? ' collapsed' : ''}`}>
+      <aside className={`sidebar${open ? ' open' : ''}`}>
         <div className="sidebar-head">
           <Link to="/" className="sidebar-brand" onClick={close} title="CDN-backend">
-            {collapsed ? <span className="sidebar-brand-mark">C</span> : 'CDN-backend'}
+            <span className="sidebar-brand-mark">C</span>
           </Link>
-          <button
-            type="button"
-            className="sidebar-collapse-btn"
-            aria-label={collapsed ? t('nav.expandSidebar') : t('nav.collapseSidebar')}
-            onClick={onToggleCollapse}
-          >
-            {collapsed ? expandIcon : collapseIcon}
-          </button>
         </div>
 
         <nav className="sidebar-nav">
@@ -94,7 +58,7 @@ export default function Sidebar({ collapsed, onToggleCollapse }) {
             onClick={close}
             title={t('nav.feed')}
           >
-            {houseIcon}
+            <FiHome />
             <span className="sidebar-label">{t('nav.feed')}</span>
           </NavLink>
           <NavLink
@@ -103,7 +67,7 @@ export default function Sidebar({ collapsed, onToggleCollapse }) {
             onClick={close}
             title={t('nav.explore')}
           >
-            {exploreIcon}
+            <FiSearch />
             <span className="sidebar-label">{t('nav.explore')}</span>
           </NavLink>
           {user && (
@@ -113,7 +77,7 @@ export default function Sidebar({ collapsed, onToggleCollapse }) {
               onClick={close}
               title={t('nav.uploadImage')}
             >
-              {uploadIcon}
+              <FiUpload />
               <span className="sidebar-label">{t('nav.uploadImage')}</span>
             </NavLink>
           )}
@@ -124,7 +88,7 @@ export default function Sidebar({ collapsed, onToggleCollapse }) {
               onClick={close}
               title={t('nav.settings')}
             >
-              {settingsIcon}
+              <FiSettings />
               <span className="sidebar-label">{t('nav.settings')}</span>
             </NavLink>
           )}

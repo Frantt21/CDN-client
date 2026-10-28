@@ -15,82 +15,17 @@ import { extractDominantColor } from '../utils/colors'
 import { getImageStyle } from '../utils/imagePosition'
 import { imageToMasonryItem } from '../utils/masonry'
 import { readCached, writeCached } from '../utils/cache'
+import {
+  HiPencil,
+  HiDotsVertical,
+  HiLink,
+  HiCheck,
+} from 'react-icons/hi'
 
 const PROFILE_TTL_MS = 5 * 60 * 1000
 const profileCacheKey = (username) => `cdn_profile_${username}`
 const profileImagesCacheKey = (id) => `cdn_profile_images_${id}`
 const USERNAME_REGEX = /^[a-z0-9_]+$/
-
-function PencilIcon() {
-  return (
-    <svg
-      aria-hidden="true"
-      viewBox="0 0 24 24"
-      width="20"
-      height="20"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" />
-    </svg>
-  )
-}
-
-function ThreeDotsIcon() {
-  return (
-    <svg
-      aria-hidden="true"
-      viewBox="0 0 24 24"
-      width="16"
-      height="16"
-      fill="currentColor"
-    >
-      <circle cx="5" cy="12" r="1.7" />
-      <circle cx="12" cy="12" r="1.7" />
-      <circle cx="19" cy="12" r="1.7" />
-    </svg>
-  )
-}
-
-function LinkIcon() {
-  return (
-    <svg
-      aria-hidden="true"
-      viewBox="0 0 24 24"
-      width="14"
-      height="14"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
-      <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
-    </svg>
-  )
-}
-
-function CheckIcon() {
-  return (
-    <svg
-      aria-hidden="true"
-      viewBox="0 0 24 24"
-      width="14"
-      height="14"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M20 6L9 17l-5-5" />
-    </svg>
-  )
-}
 
 export function UserProfilePage() {
   const { username = '' } = useParams()
@@ -493,20 +428,19 @@ export function UserProfilePage() {
                 {t('profile.editProfile')}
               </button>
             )}
-            <div className="masonry-menu" data-menu>
-              <button
+            <div className="masonry-menu" data-menu>                <button
                 type="button"
                 className="btn btn-glass profile-dots-btn"
                 aria-label={t('profile.moreOptions')}
                 aria-expanded={menuOpen}
                 onClick={() => setMenuOpen((prev) => !prev)}
               >
-                <ThreeDotsIcon />
+                <HiDotsVertical />
               </button>
               {menuOpen && (
                 <div className="masonry-dropdown">
                   <button type="button" onClick={handleCopyUrl}>
-                    {copied ? <CheckIcon /> : <LinkIcon />}
+                    {copied ? <HiCheck /> : <HiLink />}
                     {copied ? t('profile.urlCopied') : t('profile.copyUrl')}
                   </button>
                 </div>
@@ -549,7 +483,47 @@ export function UserProfilePage() {
               >
                 <span className="banner-picker-placeholder">{t('profile.banner')}</span>
                 <span className="avatar-picker-overlay" aria-hidden="true">
-                  <PencilIcon />
+                  <HiPencil />
+                </span>
+              </button>
+            )}
+            <input
+              ref={bannerInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/gif,image/webp"
+              className="visually-hidden"
+              onChange={handleBannerChange}
+            />
+            {bannerFile && <span className="muted">{bannerFile.name}</span>}
+
+            {avatarPreview || user.avatarUrl ? (
+              <>
+                <ImagePositionEditor
+                  key={bannerPreview ?? bannerUrl(user.id)}
+                  imageUrl={bannerPreview ?? bannerUrl(user.id)}
+                  initialPosition={bannerPosition}
+                  aspectRatio={bannerAspect}
+                  onPositionChange={setBannerPosition}
+                />
+                <button
+                  type="button"
+                  className="btn btn-glass btn-sm"
+                  onClick={() => bannerInputRef.current?.click()}
+                >
+                  {t('profile.changeBanner')}
+                </button>
+              </>
+            ) : (
+              <button
+                type="button"
+                className="banner-picker-btn"
+                aria-label={t('profile.changeBanner')}
+                title={t('profile.changeBanner')}
+                onClick={() => bannerInputRef.current?.click()}
+              >
+                <span className="banner-picker-placeholder">{t('profile.banner')}</span>
+                <span className="avatar-picker-overlay" aria-hidden="true">
+                  <HiPencil />
                 </span>
               </button>
             )}
@@ -591,7 +565,7 @@ export function UserProfilePage() {
               >
                 <span className="avatar-picker-initial">{user.nickname?.[0]?.toUpperCase()}</span>
                 <span className="avatar-picker-overlay" aria-hidden="true">
-                  <PencilIcon />
+                  <HiPencil />
                 </span>
               </button>
             )}

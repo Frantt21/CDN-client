@@ -1,24 +1,7 @@
 import { useTranslation } from 'react-i18next'
 import { imageThumbUrl, imageUrl } from '../api'
 import { useAuth } from '../auth/AuthContext'
-
-function BookmarkIcon() {
-  return (
-    <svg
-      aria-hidden="true"
-      viewBox="0 0 24 24"
-      width="16"
-      height="16"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
-    </svg>
-  )
-}
+import { HiBookmark } from 'react-icons/hi'
 
 export function ImageCard({ image, ownerName, onDelete, saved = false, onToggleSave }) {
   const { user } = useAuth()
@@ -47,7 +30,7 @@ export function ImageCard({ image, ownerName, onDelete, saved = false, onToggleS
                 aria-label={saved ? t('common.saved') : t('common.save')}
                 aria-pressed={saved}
               >
-                <BookmarkIcon />
+                <HiBookmark />
               </button>
             )}
             {canDelete && onDelete && (

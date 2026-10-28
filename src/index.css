@@ -1,32 +1,35 @@
 :root {
-  /* ===== Paleta fuente (3 colores base del tema) ===== */
-  --ink: #0A0908;        /* casi negro: fondo base */
-  --wine: #cea2fd;       /* vino: acento principal */
-  --ivory: #F2F4F3;      /* marfil: texto / contraste */
+  /* ===== Paleta en escala de grises (negro -> blanco) ===== */
+  --ink: #0a0a0a;       /* negro base */
+  --paper: #f4f4f4;     /* blanco/crema para alto contraste */
 
-  /* Tonos derivados */
-  --wine-light: #e1c5ff; /* vino aclarado: bordes y hover */
-  --wine-tint: #DCA6B0;  /* vino claro: texto sobre fondo oscuro */
+  /* Tonos grises intermedios */
+  --gray-900: #1a1a1a;
+  --gray-800: #212121;
+  --gray-700: #333333;
+  --gray-600: #4a4a4a;
+  --gray-400: #8a8a8a;
+  --gray-200: #c8c8c8;
 
   /* ===== Fondo y superficies ===== */
   --color-bg: var(--ink);
-  --color-surface: #151013;           /* superficie base (un paso sobre el fondo) */
-  --color-surface-raised: #21161A;    /* inputs, tarjetas y elevación */
-  --color-glass: rgba(10, 9, 8, 0.55);        /* fondo translúcido glass */
-  --color-glass-border: rgba(242, 244, 243, 0.16); /* borde del glass */
+  --color-surface: var(--gray-900);
+  --color-surface-raised: var(--gray-800);
+  --color-glass: rgba(10, 10, 10, 0.55);
+  --color-glass-border: rgba(244, 244, 244, 0.16);
 
   /* ===== Texto ===== */
-  --color-text: var(--ivory);
-  --color-text-muted: #A9A5A3;
+  --color-text: var(--paper);
+  --color-text-muted: var(--gray-400);
 
-  /* ===== Acento / acción ===== */
-  --color-accent: var(--wine);
-  --color-accent-hover: var(--wine-light);
-  --color-accent-contrast: var(--ivory); /* texto sobre acento */
+  /* ===== Acento / acción (gris medio, sin colores cálidos) ===== */
+  --color-accent: var(--gray-700);
+  --color-accent-hover: var(--gray-600);
+  --color-accent-contrast: var(--paper);
 
   /* ===== Bordes y estados ===== */
-  --color-border: var(--wine-light);
-  --color-danger: #E5484D;
+  --color-border: var(--gray-200);
+  --color-danger: #d94a4a;
 
   /* ===== Forma y efectos ===== */
   --radius: 12px;
@@ -65,21 +68,12 @@ h2 {
 
 /* Contenedores */
 .app-shell {
-  margin-left: 264px;
-  min-height: 100vh;
-  transition: margin-left 0.2s ease;
-}
-
-.app-shell.collapsed {
   margin-left: 76px;
+  min-height: 100vh;
 }
 
 @media (max-width: 768px) {
   .app-shell {
-    margin-left: 0;
-  }
-
-  .app-shell.collapsed {
     margin-left: 0;
   }
 }
@@ -304,10 +298,12 @@ h2 {
 .btn-primary {
   background: var(--color-accent);
   color: var(--color-accent-contrast);
+  border: 1px solid var(--color-border);
 }
 
 .btn-primary:hover:not(:disabled) {
   background: var(--color-accent-hover);
+  border-color: var(--gray-600);
 }
 
 a.btn {
@@ -330,7 +326,7 @@ a.btn {
 /* Glass más transparente y claro: fondo blanco translúcido en vez del
    oscuro al 55% (aplica a editar perfil, 3 puntos y botones del editor). */
 .btn-glass {
-  background: rgba(242, 244, 243, 0.08);
+  background: rgba(244, 244, 244, 0.08);
   border: 1px solid var(--color-glass-border);
   color: var(--color-text);
   backdrop-filter: blur(10px);
@@ -338,7 +334,7 @@ a.btn {
 }
 
 .btn-glass:hover {
-  background: rgba(242, 244, 243, 0.16);
+  background: rgba(244, 244, 244, 0.16);
   color: var(--color-text);
 }
 
@@ -490,8 +486,9 @@ select:focus {
 }
 
 .bookmark-btn.saved {
-  color: var(--wine-tint);
-  background: rgba(73, 17, 28, 0.35);
+  color: var(--paper);
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
 }
 
 /* Usuarios */
@@ -531,8 +528,9 @@ select:focus {
   width: 34px;
   height: 34px;
   border-radius: 50%;
-  background: var(--color-accent);
-  color: var(--color-accent-contrast);
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
   font-weight: 700;
 }
 
@@ -573,9 +571,9 @@ select:focus {
   margin-left: 0.5rem;
   padding: 0.05rem 0.5rem;
   border-radius: 999px;
-  background: rgba(73, 17, 28, 0.35);
+  background: var(--color-surface-raised);
   border: 1px solid var(--color-border);
-  color: var(--wine-tint);
+  color: var(--color-text-muted);
   font-size: 0.7rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -1106,7 +1104,7 @@ select:focus {
 
 .banner-picker-btn:hover,
 .banner-picker-btn:focus-visible {
-  border-color: var(--wine-tint);
+  border-color: var(--gray-200);
 }
 
 .banner-picker-btn img {
@@ -1149,8 +1147,8 @@ select:focus {
 
 .avatar-picker-btn:hover,
 .avatar-picker-btn:focus-visible {
-  border-color: var(--wine-tint);
-  box-shadow: 0 0 0 3px rgba(220, 166, 176, 0.25);
+  border-color: var(--gray-200);
+  box-shadow: 0 0 0 3px rgba(244, 244, 244, 0.2);
 }
 
 .avatar-picker-btn img {
@@ -1168,8 +1166,9 @@ select:focus {
   justify-content: center;
   font-size: 2.4rem;
   font-weight: 700;
-  color: var(--color-accent-contrast);
-  background: var(--color-accent);
+  color: var(--color-text);
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
 }
 
 .avatar-picker-overlay {
@@ -1276,4 +1275,9 @@ select:focus {
 /* Los tableros ocultos (tabs feed/saved) no ocupan espacio ni se re-montan */
 [hidden] {
   display: none !important;
+}
+
+/* ===== Settings ===== */
+.settings-page {
+  padding: 2rem 1.5rem;
 }

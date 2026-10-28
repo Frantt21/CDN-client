@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
+import { FiX } from 'react-icons/fi'
 
 export function Dialog({ open, onClose, title, children, wide = false }) {
   const { t } = useTranslation()
@@ -37,7 +38,7 @@ export function Dialog({ open, onClose, title, children, wide = false }) {
             aria-label={t('common.close')}
             onClick={onClose}
           >
-            ×
+            <FiX />
           </button>
         </div>
         <div className="dialog-body">{children}</div>
