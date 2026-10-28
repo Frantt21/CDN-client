@@ -122,7 +122,7 @@ export default {
 
   login: {
     title: 'Ingresar',
-    email: 'Email',
+    credential: 'Email o username',
     password: 'Contraseña',
     submit: 'Ingresar',
     submitting: 'Ingresando…',

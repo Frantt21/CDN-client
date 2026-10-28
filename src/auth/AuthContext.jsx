@@ -29,8 +29,13 @@ export function AuthProvider({ children }) {
     setUser(res)
   }
 
-  const login = async (email, password) => {
-    persist(await api.login({ email, password }))
+  const login = async (credential, password) => {
+    persist(await api.login({
+      password,
+      ...(credential && credential.includes('@')
+        ? { email: credential }
+        : { username: credential })
+    }))
   }
 
   const register = async (data) => {
