@@ -1,8 +1,14 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { extractDominantColor } from '../utils/colors'
+import { DEFAULT_RATIO, writeCachedRatio } from '../utils/masonry'
 import { HiDotsVertical, HiPencil, HiBookmark, HiTrash } from 'react-icons/hi'
 import './Masonry.css'
+
+/** Padding interno de cada card (.item-wrapper): 6px a cada lado. */
+const CARD_PADDING = 12
+/** Altura usada mientras no se pudo medir la columna. */
+const FALLBACK_IMG_HEIGHT = 260
 
 /** Cantidad de columnas según el ancho de pantalla (matchMedia nativo). */
 const useMedia = (queries, values, defaultValue) => {
@@ -30,13 +36,13 @@ const BookmarkIcon = HiBookmark
 const TrashIcon = HiTrash
 
 /**
- * Masonry 100% nativo con CSS Grid: sin mediciones JS (ResizeObserver),
- * sin virtualización por scroll ni posicionamiento absoluto.
+ * Masonry 100% nativo con CSS Grid: sin posicionamiento absoluto ni
+ * virtualización por scroll.
  *
  * El grid usa filas de 1px (`grid-auto-rows: 1px`) y cada card ocupa
- * `span` filas según su altura pseudo-determinística (estable entre
- * renders), así el layout no depende del ancho medido del contenedor y
- * las cards nunca "desaparecen" al alternar tabs o re-renderizar.
+ * `span` filas igual a su altura en px. La altura sale del RATIO real de
+ * la imagen (medido al cargar y cacheado), así cada card respeta la
+ * proporción de su foto en vez de una altura aleatoria.
  */
 const Masonry = ({ items, onItemClick }) => {
   const { t } = useTranslation()
@@ -49,6 +55,31 @@ const Masonry = ({ items, onItemClick }) => {
   // Color dominante por card (extraído del thumbnail, cacheado en localStorage):
   // se usa como fondo del contenedor para el efecto hover.
   const [cardColors, setCardColors] = useState({})
+  // Ancho de columna medido (una sola medición por resize, no por card) y
+  // ratio real de cada imagen medido al cargar.
+  const listRef = useRef(null)
+  const [colWidth, setColWidth] = useState(0)
+  const [ratios, setRatios] = useState({})
+
+  useEffect(() => {
+    const el = listRef.current
+    if (!el) return undefined
+    const measure = () => setColWidth(el.clientWidth / columns)
+    measure()
+    const observer = new ResizeObserver(measure)
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [columns])
+
+  // Al cargar la imagen se guarda su ratio (para esta sesión y para las
+  // siguientes visitas), y la card ajusta su altura a la proporción real.
+  const handleImageLoad = (item) => (e) => {
+    const { naturalWidth, naturalHeight } = e.currentTarget
+    if (!naturalWidth || !naturalHeight) return
+    const ratio = naturalWidth / naturalHeight
+    writeCachedRatio(item.img, ratio)
+    setRatios((prev) => (prev[item.id] ? prev : { ...prev, [item.id]: ratio }))
+  }
 
   useEffect(() => {
     setOpenMenuId(null)
@@ -78,9 +109,13 @@ const Masonry = ({ items, onItemClick }) => {
   }
 
   return (
-    <div className="masonry-list" style={{ '--masonry-cols': columns }}>
+    <div className="masonry-list" ref={listRef} style={{ '--masonry-cols': columns }}>
       {items.map((item) => {
-        const span = Math.max(1, Math.round((item.height ?? 300) / 2))
+        // Alto de la imagen según el ratio real; la card suma el padding.
+        const ratio = ratios[item.id] ?? item.ratio ?? DEFAULT_RATIO
+        const imgHeight =
+          colWidth > CARD_PADDING ? (colWidth - CARD_PADDING) / ratio : FALLBACK_IMG_HEIGHT
+        const span = Math.max(1, Math.ceil(imgHeight + CARD_PADDING))
         const hasActions =
           Boolean(item.onToggleSave) ||
           Boolean(item.onEdit) ||
@@ -106,6 +141,7 @@ const Masonry = ({ items, onItemClick }) => {
                 alt={item.title}
                 loading="lazy"
                 decoding="async"
+                onLoad={handleImageLoad(item)}
               />
               <div className="item-overlay">
                 <div className="item-caption">
