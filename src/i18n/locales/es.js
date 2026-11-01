@@ -26,6 +26,10 @@ export default {
     searchAria: 'Buscar',
     collapseSidebar: 'Retraer barra lateral',
     expandSidebar: 'Expandir barra lateral',
+    sidebarExpanded: 'Expandido',
+    sidebarCollapsed: 'Colapsado',
+    sidebarHover: 'Al pasar el ratón',
+    sidebarCycle: 'Cambiar modo de la barra lateral',
   },
 
   home: {
@@ -151,7 +155,16 @@ export default {
     title: 'Ajustes',
     comingSoon: 'Próximamente: preferencias de cuenta, tema y notificaciones.',
     logout: 'Cerrar sesión',
+    logoutDesc: 'Cerrala sesión en este dispositivo.',
+    logoutBtn: 'Cerrar sesión',
     language: 'Idioma',
+    languageDesc: 'Idioma de la interfaz',
+    appearance: 'Apariencia',
+    appearanceDesc: 'Idioma y preferencias de la interfaz.',
+    categorySystem: 'Sistema',
+    categorySystemDesc: 'Idioma y preferencias',
+    categoryAccount: 'Cuenta',
+    categoryAccountDesc: 'Sesión y acceso',
   },
 
   masonry: {

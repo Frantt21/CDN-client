@@ -1276,8 +1276,3 @@ select:focus {
 [hidden] {
   display: none !important;
 }
-
-/* ===== Settings ===== */
-.settings-page {
-  padding: 2rem 1.5rem;
-}

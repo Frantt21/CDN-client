@@ -19,9 +19,10 @@
 
 /* El acento (color dominante del thumbnail) SOLO aparece en hover, como
    fondo DETRÁS de la imagen: el padding de 6px deja ver el color alrededor.
-   La imagen no se escala ni se mueve: su tamaño es siempre el mismo. */
+   La imagen no se escala ni se mueve: su tamaño es siempre el mismo.
+   El color se mezcla con transparente para que el borde sea translúcido. */
 .item-wrapper:hover {
-  background: var(--item-color, transparent);
+  background: color-mix(in srgb, var(--item-color, transparent) 30%, transparent);
   z-index: 2;
 }
 

@@ -1,0 +1,337 @@
+/* ==========================================
+   Settings Page Styles (portado de FastChange)
+   ========================================== */
+
+.settings-page {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+  overflow-x: hidden;
+}
+
+/* ── Card ── */
+
+.settings-card {
+  background: var(--color-surface, #1a1a1a);
+  border-radius: var(--radius, 10px);
+}
+
+.settings-card--split {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+}
+
+/* ── Panel de navegación (izquierda) ── */
+
+.settings-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 12px;
+  min-width: 220px;
+  flex-shrink: 0;
+  overflow: hidden;
+  border-radius: var(--radius, 10px) 0 0 var(--radius, 10px);
+}
+
+.settings-nav-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 14px;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius, 8px);
+  cursor: pointer;
+  font-family: inherit;
+  text-align: left;
+  transition: background 0.15s ease;
+}
+
+.settings-nav-btn:hover {
+  background: rgba(244, 244, 244, 0.05);
+}
+
+.settings-nav-btn--active {
+  background: rgba(244, 244, 244, 0.09);
+}
+
+.settings-nav-icon {
+  font-size: 1.2rem;
+  color: var(--color-text-muted, #6b7280);
+  flex-shrink: 0;
+}
+
+.settings-nav-btn--active .settings-nav-icon {
+  color: var(--color-text, #ffffff);
+}
+
+.settings-nav-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.settings-nav-title {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--color-text, #ffffff);
+  display: block;
+  line-height: 1.3;
+}
+
+.settings-nav-desc {
+  font-size: 0.72rem;
+  color: var(--color-text-muted, #6b7280);
+  display: block;
+  margin-top: 1px;
+}
+
+/* ── Panel de contenido (derecha) ── */
+
+.settings-panel {
+  flex: 1;
+  padding: 20px 24px;
+  border-left: 1px solid var(--color-glass-border, rgba(244, 244, 244, 0.16));
+  border-radius: 0 var(--radius, 10px) var(--radius, 10px) 0;
+  min-height: 200px;
+}
+
+/* ── Fila dentro del panel ── */
+
+.settings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 0;
+  flex-wrap: wrap;
+}
+
+.settings-row-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
+}
+
+.settings-section-icon {
+  font-size: 1.1rem;
+  flex-shrink: 0;
+  margin-top: 1px;
+  color: var(--color-text-muted, #6b7280);
+}
+
+.settings-section-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-text, #ffffff);
+  margin: 0 0 1px 0;
+}
+
+.settings-section-desc {
+  font-size: 0.75rem;
+  color: var(--color-text-muted, #6b7280);
+  margin: 0;
+  line-height: 1.3;
+}
+
+.settings-row-divider {
+  height: 1px;
+  background: var(--color-glass-border, rgba(244, 244, 244, 0.16));
+  margin: 0;
+}
+
+/* ── Selector de idioma (dropdown) ── */
+
+.settings-select-wrapper {
+  position: relative;
+  flex-shrink: 0;
+  min-width: 150px;
+}
+
+.settings-select-trigger {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 7px 12px;
+  border-radius: var(--radius-sm, 6px);
+  background: rgba(244, 244, 244, 0.05);
+  border: 1px solid var(--color-glass-border, rgba(244, 244, 244, 0.16));
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+  font-family: inherit;
+  font-size: 0.82rem;
+  color: var(--color-text, #ffffff);
+  text-align: left;
+}
+
+.settings-select-trigger:hover {
+  background: rgba(244, 244, 244, 0.1);
+  border-color: var(--color-text-muted, #6b7280);
+}
+
+.settings-select-label {
+  flex: 1;
+  font-weight: 500;
+}
+
+.settings-select-arrow {
+  font-size: 0.7rem;
+  color: var(--color-text-muted, #6b7280);
+  transition: transform 0.2s ease;
+}
+
+.settings-select-arrow--open {
+  transform: rotate(180deg);
+}
+
+.settings-select-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  background: var(--color-surface, #1a1a1a);
+  border: 1px solid var(--color-glass-border, rgba(244, 244, 244, 0.16));
+  border-radius: var(--radius-sm, 6px);
+  overflow: hidden;
+  z-index: 100;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+.settings-select-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 12px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.82rem;
+  color: var(--color-text, #ffffff);
+  text-align: left;
+  transition: background 0.12s ease;
+}
+
+.settings-select-option:hover {
+  background: rgba(244, 244, 244, 0.06);
+}
+
+.settings-select-option--active {
+  background: rgba(244, 244, 244, 0.1);
+  font-weight: 600;
+}
+
+.settings-select-check {
+  margin-left: auto;
+  font-size: 0.75rem;
+  color: var(--color-text-muted, #6b7280);
+}
+
+.settings-flag {
+  flex-shrink: 0;
+  font-size: 0.95rem;
+  line-height: 1;
+  display: block;
+}
+
+/* ── Botón destructivo (cerrar sesión) ── */
+
+.settings-danger-btn {
+  padding: 8px 14px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  background: rgba(217, 74, 74, 0.1);
+  border: none;
+  border-radius: var(--radius-sm, 6px);
+  color: var(--color-danger, #d94a4a);
+  cursor: pointer;
+  transition: background 0.15s ease;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+}
+
+.settings-danger-btn:hover {
+  background: rgba(217, 74, 74, 0.2);
+}
+
+/* ── Responsive ── */
+
+@media (max-width: 850px) {
+  .settings-card--split {
+    flex-direction: column;
+  }
+
+  .settings-nav {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 4px;
+    padding: 10px;
+    min-width: auto;
+    width: 100%;
+    border-radius: var(--radius, 10px) var(--radius, 10px) 0 0;
+  }
+
+  .settings-nav-btn {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 8px 4px;
+    gap: 4px;
+    width: 100%;
+    min-height: 60px;
+  }
+
+  .settings-nav-icon {
+    font-size: 1rem;
+  }
+
+  .settings-nav-title {
+    font-size: 0.75rem;
+  }
+
+  .settings-nav-desc {
+    display: none;
+  }
+
+  .settings-panel {
+    width: 100%;
+    border-left: none;
+    border-top: 1px solid var(--color-glass-border, rgba(244, 244, 244, 0.16));
+    border-radius: 0 0 var(--radius, 10px) var(--radius, 10px);
+  }
+}
+
+@media (max-width: 480px) {
+  .settings-page {
+    padding: 1.25rem 1rem;
+  }
+
+  .settings-nav-btn {
+    padding: 6px 2px;
+    min-height: 50px;
+  }
+
+  .settings-nav-icon {
+    font-size: 0.85rem;
+  }
+
+  .settings-nav-title {
+    font-size: 0.65rem;
+  }
+
+  .settings-panel {
+    padding: 12px;
+  }
+
+  .settings-select-wrapper {
+    min-width: 120px;
+  }
+}

@@ -26,6 +26,10 @@ export default {
     searchAria: 'Search',
     collapseSidebar: 'Collapse sidebar',
     expandSidebar: 'Expand sidebar',
+    sidebarExpanded: 'Expanded',
+    sidebarCollapsed: 'Collapsed',
+    sidebarHover: 'On hover',
+    sidebarCycle: 'Change sidebar mode',
   },
 
   home: {
@@ -151,7 +155,16 @@ export default {
     title: 'Settings',
     comingSoon: 'Coming soon: account preferences, theme and notifications.',
     logout: 'Log out',
+    logoutDesc: 'Sign out on this device.',
+    logoutBtn: 'Log out',
     language: 'Language',
+    languageDesc: 'Interface language',
+    appearance: 'Appearance',
+    appearanceDesc: 'Language and interface preferences.',
+    categorySystem: 'System',
+    categorySystemDesc: 'Language and preferences',
+    categoryAccount: 'Account',
+    categoryAccountDesc: 'Session and access',
   },
 
   masonry: {
