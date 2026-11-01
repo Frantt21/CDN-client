@@ -249,7 +249,7 @@
   z-index: 110;
   width: 42px;
   height: 42px;
-  border: 1px solid var(--sidebar-border);
+  border: none;
   border-radius: var(--sidebar-radius);
   background: var(--sidebar-bg);
   color: var(--sidebar-text);

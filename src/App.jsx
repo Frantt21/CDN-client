@@ -10,6 +10,7 @@ import { UploadPage } from './pages/UploadPage'
 import { UserProfilePage } from './pages/UserProfilePage'
 import { SettingsPage } from './pages/SettingsPage'
 import { ExplorePage } from './pages/ExplorePage'
+import { SavedPage } from './pages/SavedPage'
 import { ImageDetailPage } from './pages/ImageDetailPage'
 
 function App() {
@@ -49,6 +50,14 @@ function AppContent() {
           <Route path="/" element={<HomePage />} />
           <Route path="/feed" element={<Navigate to="/" replace />} />
           <Route path="/explore" element={<ExplorePage />} />
+          <Route
+            path="/saved"
+            element={
+              <ProtectedRoute>
+                <SavedPage />
+              </ProtectedRoute>
+            }
+          />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/users/:username" element={<ProfileRoute />} />

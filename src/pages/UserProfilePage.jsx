@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { api, ApiError, avatarUrl, bannerUrl } from '../api'
 import { useAuth } from '../auth/AuthContext'
 import { Dialog } from '../components/Dialog'
 import { ImageEditDialog } from '../components/ImageEditDialog'
-import ImagePositionEditor from '../components/ImagePositionEditor'
+import ProfileImageModal from '../components/ProfileImageModal'
 import Masonry from '../components/Masonry'
 import { MasonrySkeleton, ProfileSkeleton } from '../components/Skeletons'
 import { UserAvatar } from '../components/UserAvatar'
@@ -26,6 +26,10 @@ const PROFILE_TTL_MS = 5 * 60 * 1000
 const profileCacheKey = (username) => `cdn_profile_${username}`
 const profileImagesCacheKey = (id) => `cdn_profile_images_${id}`
 const USERNAME_REGEX = /^[a-z0-9_]+$/
+// Posición inicial de una imagen nueva (centrada; el banner arranca con el
+// zoom mínimo del modo background, igual que antes).
+const DEFAULT_AVATAR_POSITION = JSON.stringify({ x: 50, y: 50, zoom: 1 })
+const DEFAULT_BANNER_POSITION = JSON.stringify({ x: 50, y: 50, zoom: 1.05 })
 
 export function UserProfilePage() {
   const { username = '' } = useParams()
@@ -57,6 +61,8 @@ export function UserProfilePage() {
   const [nickname, setNickname] = useState('')
   const [editUsername, setEditUsername] = useState('')
   const [description, setDescription] = useState('')
+  // Imagen que se está editando en el submodal: null | 'banner' | 'avatar'
+  const [mediaEditor, setMediaEditor] = useState(null)
   const [avatarFile, setAvatarFile] = useState(null)
   const [avatarPreview, setAvatarPreview] = useState(null)
   const [bannerFile, setBannerFile] = useState(null)
@@ -70,8 +76,6 @@ export function UserProfilePage() {
   const [copied, setCopied] = useState(false)
   // Color del anillo del avatar: dominante de la imagen (paleta generadora).
   const [avatarRingColor, setAvatarRingColor] = useState(null)
-  const avatarInputRef = useRef(null)
-  const bannerInputRef = useRef(null)
   const profileRef = useRef(null)
   // Ratio del contenedor real del banner (la sección): el editor usa el mismo
   // ratio para que el preview coincida exactamente con el render (como FastChange,
@@ -243,22 +247,26 @@ export function UserProfilePage() {
     setBannerPosition(user.bannerPosition ?? null)
     setUsernameStatus('idle')
     setSaveError(null)
+    setMediaEditor(null)
     setEditing(true)
   }
 
-  const handleAvatarChange = (e) => {
-    const file = e.target.files?.[0] ?? null
-    setAvatarFile(file)
-    setAvatarPreview(file ? URL.createObjectURL(file) : null)
-    // Imagen nueva: la posición arranca en el centro (como el editor al cargar).
-    if (file) setAvatarPosition(JSON.stringify({ x: 50, y: 50, zoom: 1 }))
-  }
-
-  const handleBannerChange = (e) => {
-    const file = e.target.files?.[0] ?? null
-    setBannerFile(file)
-    setBannerPreview(file ? URL.createObjectURL(file) : null)
-    if (file) setBannerPosition(JSON.stringify({ x: 50, y: 50, zoom: 1.05 }))
+  /** Aplica lo elegido en el submodal de imagen (archivo, preview y posición).
+   *  Si no se eligió un archivo nuevo, solo se guarda la posición. */
+  const handleMediaApply = (type, { file, preview, position }) => {
+    if (type === 'banner') {
+      if (file) {
+        setBannerFile(file)
+        setBannerPreview(preview)
+      }
+      setBannerPosition(position)
+    } else {
+      if (file) {
+        setAvatarFile(file)
+        setAvatarPreview(preview)
+      }
+      setAvatarPosition(position)
+    }
   }
 
   const handleCopyUrl = async () => {
@@ -401,18 +409,20 @@ export function UserProfilePage() {
 
   return (
     <main className="container">
-      <section ref={profileRef} className="profile">
-        {user.bannerUrl && (
-          <div className="profile-banner">
-            <img
-              src={bannerUrl(user.id)}
-              alt=""
-              style={getImageStyle(user.bannerPosition)}
-            />
-          </div>
-        )}
-        <UserAvatar user={user} className="avatar-lg" ringColor={avatarRingColor} />
-        <div className="profile-info">
+      <section className="profile">
+        {/* El ref va en el banner (no en la sección) para medir SOLO su ratio */}
+        <div ref={profileRef} className="profile-main">
+          {user.bannerUrl && (
+            <div className="profile-banner">
+              <img
+                src={bannerUrl(user.id)}
+                alt=""
+                style={getImageStyle(user.bannerPosition)}
+              />
+            </div>
+          )}
+          <UserAvatar user={user} className="avatar-lg" ringColor={avatarRingColor} />
+          <div className="profile-info">
           <h1>
             {user.nickname}
             {user.role === 'admin' && <span className="role-badge">{t('profile.admin')}</span>}
@@ -446,136 +456,112 @@ export function UserProfilePage() {
                 </div>
               )}
             </div>
+            </div>
           </div>
+        </div>
+
+        {/* Cards al lado del banner (fuera de él) */}
+        <div className="profile-stats">
+          <div className="profile-stat-card">
+            <span className="profile-stat-value">{profileImages.length}</span>
+            <span className="profile-stat-label">{t('profile.imagesLabel')}</span>
+          </div>
+          {isOwnProfile && (
+            <Link to="/saved" className="profile-stat-card profile-stat-link">
+              <span className="profile-stat-value">{savedIds.size}</span>
+              <span className="profile-stat-label">{t('profile.savedLabel')}</span>
+            </Link>
+          )}
         </div>
       </section>
 
-      <Dialog open={editing} onClose={() => setEditing(false)} title={t('profile.editProfile')} wide>
+      <Dialog
+        open={editing}
+        onClose={() => {
+          setMediaEditor(null)
+          setEditing(false)
+        }}
+        title={t('profile.editProfile')}
+        wide
+      >
         <form className="media-editor-grid" onSubmit={handleSave}>
           {/* Columna izquierda: banner y avatar (editores de posición) */}
           <div className="media-editor-col">
             {saveError && <p className="error">{saveError}</p>}
 
-            {bannerPreview || user.bannerUrl ? (
-              <>
-                <ImagePositionEditor
-                  key={bannerPreview ?? bannerUrl(user.id)}
-                  imageUrl={bannerPreview ?? bannerUrl(user.id)}
-                  initialPosition={bannerPosition}
-                  aspectRatio={bannerAspect}
-                  onPositionChange={setBannerPosition}
-                />
-                <button
-                  type="button"
-                  className="btn btn-glass btn-sm"
-                  onClick={() => bannerInputRef.current?.click()}
-                >
-                  {t('profile.changeBanner')}
-                </button>
-              </>
-            ) : (
-              <button
-                type="button"
-                className="banner-picker-btn"
-                aria-label={t('profile.changeBanner')}
-                title={t('profile.changeBanner')}
-                onClick={() => bannerInputRef.current?.click()}
+            {/* Preview del perfil (estilo FastChange): el avatar va encima del
+                banner y cada imagen se edita en su submodal con zoom y drag. */}
+            <div className="profile-edit-preview">
+              <div
+                className="profile-edit-preview-banner"
+                style={{ aspectRatio: String(bannerAspect) }}
               >
-                <span className="banner-picker-placeholder">{t('profile.banner')}</span>
-                <span className="avatar-picker-overlay" aria-hidden="true">
-                  <HiPencil />
-                </span>
-              </button>
-            )}
-            <input
-              ref={bannerInputRef}
-              type="file"
-              accept="image/jpeg,image/png,image/gif,image/webp"
-              className="visually-hidden"
-              onChange={handleBannerChange}
-            />
-            {bannerFile && <span className="muted">{bannerFile.name}</span>}
+                {bannerPreview || user.bannerUrl ? (
+                  <img
+                    className="profile-edit-preview-banner-img"
+                    src={bannerPreview ?? bannerUrl(user.id)}
+                    alt=""
+                    style={getImageStyle(bannerPosition)}
+                  />
+                ) : (
+                  <button
+                    type="button"
+                    className="profile-edit-banner-empty"
+                    onClick={() => setMediaEditor('banner')}
+                  >
+                    {t('profile.banner')}
+                  </button>
+                )}
 
-            {avatarPreview || user.avatarUrl ? (
-              <>
-                <ImagePositionEditor
-                  key={bannerPreview ?? bannerUrl(user.id)}
-                  imageUrl={bannerPreview ?? bannerUrl(user.id)}
-                  initialPosition={bannerPosition}
-                  aspectRatio={bannerAspect}
-                  onPositionChange={setBannerPosition}
-                />
-                <button
-                  type="button"
-                  className="btn btn-glass btn-sm"
-                  onClick={() => bannerInputRef.current?.click()}
-                >
-                  {t('profile.changeBanner')}
-                </button>
-              </>
-            ) : (
-              <button
-                type="button"
-                className="banner-picker-btn"
-                aria-label={t('profile.changeBanner')}
-                title={t('profile.changeBanner')}
-                onClick={() => bannerInputRef.current?.click()}
-              >
-                <span className="banner-picker-placeholder">{t('profile.banner')}</span>
-                <span className="avatar-picker-overlay" aria-hidden="true">
-                  <HiPencil />
-                </span>
-              </button>
-            )}
-            <input
-              ref={bannerInputRef}
-              type="file"
-              accept="image/jpeg,image/png,image/gif,image/webp"
-              className="visually-hidden"
-              onChange={handleBannerChange}
-            />
-            {bannerFile && <span className="muted">{bannerFile.name}</span>}
+                <span className="profile-edit-preview-overlay" aria-hidden="true" />
 
-            {avatarPreview || user.avatarUrl ? (
-              <>
-                <ImagePositionEditor
-                  key={avatarPreview ?? avatarUrl(user.id)}
-                  imageUrl={avatarPreview ?? avatarUrl(user.id)}
-                  initialPosition={avatarPosition}
-                  aspectRatio={1}
-                  circular
-                  canvasWidth={128}
-                  onPositionChange={setAvatarPosition}
-                />
                 <button
                   type="button"
-                  className="btn btn-glass btn-sm"
-                  onClick={() => avatarInputRef.current?.click()}
+                  className="profile-edit-camera profile-edit-camera--banner"
+                  aria-label={t('profile.changeBanner')}
+                  title={t('profile.changeBanner')}
+                  onClick={() => setMediaEditor('banner')}
                 >
-                  {t('profile.changeAvatar')}
-                </button>
-              </>
-            ) : (
-              <button
-                type="button"
-                className="avatar-picker-btn"
-                aria-label={t('profile.changeAvatar')}
-                title={t('profile.changeAvatar')}
-                onClick={() => avatarInputRef.current?.click()}
-              >
-                <span className="avatar-picker-initial">{user.nickname?.[0]?.toUpperCase()}</span>
-                <span className="avatar-picker-overlay" aria-hidden="true">
                   <HiPencil />
-                </span>
-              </button>
-            )}
-            <input
-              ref={avatarInputRef}
-              type="file"
-              accept="image/jpeg,image/png,image/gif,image/webp"
-              className="visually-hidden"
-              onChange={handleAvatarChange}
-            />
+                </button>
+
+                <div className="profile-edit-preview-avatar">
+                  {avatarPreview || user.avatarUrl ? (
+                    <img
+                      className="profile-edit-preview-avatar-img"
+                      src={avatarPreview ?? avatarUrl(user.id)}
+                      alt=""
+                      style={getImageStyle(avatarPosition)}
+                    />
+                  ) : (
+                    <span className="avatar-picker-initial profile-edit-avatar-initial">
+                      {user.nickname?.[0]?.toUpperCase()}
+                    </span>
+                  )}
+                  <button
+                    type="button"
+                    className="profile-edit-camera profile-edit-camera--avatar"
+                    aria-label={t('profile.changeAvatar')}
+                    title={t('profile.changeAvatar')}
+                    onClick={() => setMediaEditor('avatar')}
+                  >
+                    <HiPencil />
+                  </button>
+                </div>
+
+                <div className="profile-edit-preview-info">
+                  <span className="profile-edit-preview-name">
+                    {nickname || user.nickname}
+                  </span>
+                  <span className="profile-edit-preview-username">
+                    @{editUsername || user.username}
+                  </span>
+                  {description && <p className="profile-edit-preview-bio">{description}</p>}
+                </div>
+              </div>
+            </div>
+
+            {bannerFile && <span className="muted">{bannerFile.name}</span>}
             {avatarFile && <span className="muted">{avatarFile.name}</span>}
           </div>
 
@@ -631,6 +617,34 @@ export function UserProfilePage() {
           </div>
         </form>
       </Dialog>
+
+      {/* Submodales de edición de imagen (banner / avatar), como en FastChange */}
+      {mediaEditor === 'banner' && (
+        <ProfileImageModal
+          open
+          title={t('profile.changeBanner')}
+          currentUrl={bannerPreview ?? (user.bannerUrl ? bannerUrl(user.id) : null)}
+          initialPosition={bannerPosition}
+          aspectRatio={bannerAspect}
+          defaultPosition={DEFAULT_BANNER_POSITION}
+          onApply={(payload) => handleMediaApply('banner', payload)}
+          onClose={() => setMediaEditor(null)}
+        />
+      )}
+      {mediaEditor === 'avatar' && (
+        <ProfileImageModal
+          open
+          title={t('profile.changeAvatar')}
+          currentUrl={avatarPreview ?? (user.avatarUrl ? avatarUrl(user.id) : null)}
+          initialPosition={avatarPosition}
+          aspectRatio={1}
+          circular
+          canvasWidth={220}
+          defaultPosition={DEFAULT_AVATAR_POSITION}
+          onApply={(payload) => handleMediaApply('avatar', payload)}
+          onClose={() => setMediaEditor(null)}
+        />
+      )}
 
       <div className="explore-tabs profile-tabs" role="tablist">
         <button

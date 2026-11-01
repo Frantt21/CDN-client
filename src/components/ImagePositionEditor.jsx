@@ -24,6 +24,8 @@ import { HiArrowRight, HiArrowDown } from 'react-icons/hi'
  *   canvasWidth     - ancho fijo del canvas en px (ej. 128 para el avatar);
  *                     los controles (slider de zoom) ocupan todo el ancho
  *                     del editor, así el slider queda centrado.
+ *   showControls    - false para usar solo el canvas (vista previa);
+ *                     el drag para posicionar sigue funcionando.
  *   onPositionChange - callback(positionString)
  *   style           - estilo adicional para el contenedor
  */
@@ -34,6 +36,7 @@ export default function ImagePositionEditor({
   circular = false,
   backgroundMode = false,
   canvasWidth,
+  showControls = true,
   onPositionChange,
   style,
 }) {
@@ -403,6 +406,7 @@ export default function ImagePositionEditor({
         />
       </div>
 
+      {showControls && (
       <div className="imgpos-controls" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
         <HiArrowRight className="imgpos-icon" />
         <input
@@ -430,6 +434,7 @@ export default function ImagePositionEditor({
           Reset
         </button>
       </div>
+      )}
     </div>
   )
 }

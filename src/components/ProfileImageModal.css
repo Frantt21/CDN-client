@@ -1,0 +1,44 @@
+/* ===== Submodal de edición de imagen de perfil (estilo FastChange) ===== */
+
+.profile-media-modal {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+/* Zona de subida / arrastre */
+.profile-media-drop {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.9rem 1rem;
+  border-radius: var(--radius);
+  background: var(--color-surface-raised);
+  text-align: center;
+  transition: background 0.15s ease;
+}
+
+.profile-media-drop--active {
+  background: var(--color-surface);
+}
+
+.profile-media-drop .btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.profile-media-drop-hint {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+}
+
+.profile-media-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
