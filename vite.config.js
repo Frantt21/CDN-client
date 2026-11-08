@@ -1,9 +1,8 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
-// La API corre en https://localhost:7057 (perfil "https" de launchSettings.json).
-// Si la levantás en otro puerto: VITE_API_TARGET=https://localhost:5220 npm run dev
-const apiTarget = process.env.VITE_API_TARGET ?? 'https://localhost:7057'
+// La API corre en http://localhost:5220 (perfil "http" de launchSettings.json).
+const apiTarget = process.env.VITE_API_TARGET ?? 'http://localhost:5220'
 
 // https://vite.dev/config/
 export default defineConfig({
