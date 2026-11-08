@@ -1,14 +1,13 @@
-/* ===== Paleta local del sidebar (negro -> blanco, grises intermedios) ===== */
+/* ===== Paleta del sidebar (derivada del tema compartido) ===== */
 :root {
-  --sidebar-bg: #111111;
-  --sidebar-surface: #1a1a1a;
-  --sidebar-raised: #212121;
-  --sidebar-border: #333333;
-  --sidebar-text: #e5e5e5;
-  --sidebar-text-muted: #8a8a8a;
-  --sidebar-active: #3a3a3a;
-  --sidebar-active-text: #ffffff;
-  --sidebar-radius: 10px;
+  --sidebar-bg: var(--color-surface);
+  --sidebar-surface: var(--color-surface);
+  --sidebar-raised: var(--overlay-bg-hover);
+  --sidebar-border: var(--color-border);
+  --sidebar-text: var(--color-text-secondary);
+  --sidebar-active: var(--overlay-bg-active);
+  --sidebar-active-text: var(--color-text);
+  --sidebar-radius: var(--radius);
 }
 
 /* ===== Sidebar flotante a la izquierda ===== */
@@ -193,7 +192,7 @@
   z-index: 1100;
   background: var(--sidebar-surface);
   border: 1px solid var(--sidebar-border);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   overflow: hidden;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
   animation: sidebar-fade-in 0.1s ease;

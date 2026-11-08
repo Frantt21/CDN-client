@@ -13,6 +13,7 @@ function PasswordField({ value, onChange, autoComplete, minLength, label }) {
       {label ?? t('register.password')}
       <div className="password-input-wrap">
         <input
+          className="password-input"
           type={visible ? 'text' : 'password'}
           value={value}
           onChange={(e) => onChange(e.target.value)}
@@ -75,6 +76,7 @@ export function RegisterPage() {
           <label>
             {t('register.nickname')}
             <input
+              className="login-input" 
               type="text"
               value={nickname}
               onChange={(e) => setNickname(e.target.value)}
@@ -85,6 +87,7 @@ export function RegisterPage() {
           <label>
             {t('register.username')}
             <input
+              className="login-input"             
               type="text"
               value={username}
               onChange={(e) => setUsername(e.target.value.toLowerCase())}
@@ -96,6 +99,7 @@ export function RegisterPage() {
           <label>
             {t('register.email')}
             <input
+              className="login-input"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -112,6 +116,7 @@ export function RegisterPage() {
           <label>
             {t('register.description')}
             <textarea
+              className="login-input"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={3}

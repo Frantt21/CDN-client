@@ -79,7 +79,7 @@ export function LoginPage() {
             onChange={setPassword}
             autoComplete="current-password"
           />
-          <button type="submit" className="btn btn-primary" disabled={busy}>
+          <button type="submit" className="btn-login" disabled={busy}>
             {busy ? t('login.submitting') : t('login.submit')}
           </button>
         </form>

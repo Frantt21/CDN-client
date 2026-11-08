@@ -16,7 +16,7 @@
   gap: 0.4rem;
   padding: 0.9rem 1rem;
   border-radius: var(--radius);
-  background: var(--color-surface-raised);
+  background: var(--color-surface-hover);
   text-align: center;
   transition: background 0.15s ease;
 }

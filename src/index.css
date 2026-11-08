@@ -1,48 +1,80 @@
 :root {
-  /* ===== Paleta en escala de grises (negro -> blanco) ===== */
-  --ink: #0a0a0a;       /* negro base */
-  --paper: #f4f4f4;     /* blanco/crema para alto contraste */
+  /* ==========================================
+     Esquema: negro / blanco / grises neutros
+     ========================================== */
+  --color-bg: #000000;
+  --color-surface: #1a1a1a;
+  --color-surface-hover: #252525;
+  --color-border: #2a2a2a;
+  --color-text: #ffffff;
+  --color-text-secondary: #9ca3af;
+  --color-text-muted: #6b7280;
+  --color-accent: #6b7280;
+  --color-accent-hover: #9ca3af;
+  --color-danger-action: rgba(239, 68, 68, 0.1);
+  --color-text-danger: #ef4444;
+  --color-success: #4ade80;
+  --radius: 10px;
+  --radius-sm: 6px;
+  --radius-lg: 14px;
 
-  /* Tonos grises intermedios */
-  --gray-900: #1a1a1a;
-  --gray-800: #212121;
-  --gray-700: #333333;
-  --gray-600: #4a4a4a;
-  --gray-400: #8a8a8a;
-  --gray-200: #c8c8c8;
+  /* Overlay colors — modo oscuro (default) */
+  --overlay-bg: rgba(255, 255, 255, 0.08);
+  --overlay-bg-hover: rgba(255, 255, 255, 0.14);
+  --overlay-bg-active: rgba(255, 255, 255, 0.18);
+  --overlay-bg-subtle: rgba(255, 255, 255, 0.06);
+  --overlay-border: rgba(255, 255, 255, 0.12);
+}
 
-  /* ===== Fondo y superficies ===== */
-  --color-bg: var(--ink);
-  --color-surface: var(--gray-900);
-  --color-surface-raised: var(--gray-800);
-  --color-glass: rgba(10, 10, 10, 0.55);
-  --color-glass-border: rgba(244, 244, 244, 0.16);
+/* ==========================================
+   Tema: Claro
+   ========================================== */
+[data-theme="light"] {
+  --color-bg: #e8e8e8;
+  --color-surface: #ffffff;
+  --color-surface-hover: #f2f2f2;
+  --color-border: #d0d0d0;
+  --color-text: #1a1a1a;
+  --color-text-secondary: #6b7280;
+  --color-text-muted: #9ca3af;
+  --color-accent: #9ca3af;
+  --color-accent-hover: #6b7280;
+  --color-success: #16a34a;
 
-  /* ===== Texto ===== */
-  --color-text: var(--paper);
-  --color-text-muted: var(--gray-400);
-
-  /* ===== Acento / acción (gris medio, sin colores cálidos) ===== */
-  --color-accent: var(--gray-700);
-  --color-accent-hover: var(--gray-600);
-  --color-accent-contrast: var(--paper);
-
-  /* ===== Bordes y estados ===== */
-  --color-border: var(--gray-200);
-  --color-danger: #d94a4a;
-
-  /* ===== Forma y efectos ===== */
-  --radius: 12px;
-  --radius-sm: 12px;
-  --radius-lg: 12px;
-  --blur: 16px;
+  /* Overlay colors — modo claro */
+  --overlay-bg: rgba(0, 0, 0, 0.06);
+  --overlay-bg-hover: rgba(0, 0, 0, 0.1);
+  --overlay-bg-active: rgba(0, 0, 0, 0.14);
+  --overlay-bg-subtle: rgba(0, 0, 0, 0.04);
+  --overlay-border: rgba(0, 0, 0, 0.1);
 }
 
 * {
   box-sizing: border-box;
 }
 
+/* ── Scrollbar global: track transparente, thumb visible ── */
+html::-webkit-scrollbar {
+  width: 6px;
+}
+
+html::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+html::-webkit-scrollbar-thumb {
+  background: var(--color-border, #2a2a2a);
+  border-radius: 3px;
+}
+
+html::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-muted, #6b7280);
+}
+
+/* Firefox scrollbar + gutter estable (evita saltos de layout) */
 html {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border, #2a2a2a) transparent;
   scrollbar-gutter: stable;
 }
 
@@ -51,7 +83,7 @@ body {
   margin: 0 auto;
   background: var(--color-bg);
   color: var(--color-text);
-  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  font-family: 'Poppins', sans-serif;
   line-height: 1.5;
   overflow-x: hidden;
 }
@@ -141,7 +173,7 @@ h2 {
 
 .upload-fields input,
 .upload-fields textarea {
-  background: var(--color-surface-raised);
+  background: var(--color-surface-hover);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   color: var(--color-text);
@@ -218,7 +250,7 @@ h2 {
   z-index: 0;
   border-radius: inherit;
   overflow: hidden;
-  background-color: var(--color-surface-raised);
+  background-color: var(--color-surface-hover);
 }
 
 .profile-banner img {
@@ -232,7 +264,7 @@ h2 {
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(to bottom, rgba(10, 9, 8, 0.35), rgba(10, 9, 8, 0.82));
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.35), rgba(0, 0, 0, 0.82));
 }
 
 .profile-main > *:not(.profile-banner) {
@@ -275,7 +307,7 @@ h2 {
 }
 
 .profile-stat-link:hover {
-  background: var(--color-surface-raised);
+  background: var(--color-surface-hover);
   transform: translateY(-1px);
 }
 
@@ -383,7 +415,7 @@ h2 {
 
 .btn-primary {
   background: var(--color-accent);
-  color: var(--color-accent-contrast);
+  color: var(--color-text);
 }
 
 .btn-primary:hover:not(:disabled) {
@@ -409,14 +441,14 @@ a.btn {
 /* Glass más transparente y claro: fondo blanco translúcido en vez del
    oscuro al 55% (aplica a editar perfil, 3 puntos y botones del editor). */
 .btn-glass {
-  background: rgba(244, 244, 244, 0.08);
+  background: var(--overlay-bg);
   color: var(--color-text);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
 }
 
 .btn-glass:hover {
-  background: rgba(244, 244, 244, 0.16);
+  background: var(--overlay-bg-hover);
   color: var(--color-text);
 }
 
@@ -427,13 +459,13 @@ a.btn {
 
 .btn-danger {
   background: transparent;
-  color: var(--color-danger);
+  color: var(--color-text-danger);
   padding: 0.25rem 0.75rem;
   font-size: 0.8rem;
 }
 
 .btn-danger:hover {
-  background: var(--color-danger);
+  background: var(--color-text-danger);
   color: #fff;
 }
 
@@ -462,7 +494,7 @@ a.btn {
 }
 
 select {
-  background: var(--color-surface-raised);
+  background: var(--color-surface-hover);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   color: var(--color-text);
@@ -482,23 +514,6 @@ select:focus {
   gap: 0.35rem;
   font-size: 0.9rem;
   color: var(--color-text-muted);
-}
-
-.form input,
-.form textarea {
-  background: var(--color-surface-raised);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  color: var(--color-text);
-  padding: 0.6rem 0.75rem;
-  font-size: 0.95rem;
-  font-family: inherit;
-}
-
-.form input:focus,
-.form textarea:focus {
-  outline: none;
-  border-color: var(--color-accent);
 }
 
 /* Galería */
@@ -521,7 +536,7 @@ select:focus {
   width: 100%;
   height: 180px;
   object-fit: cover;
-  background: var(--color-surface-raised);
+  background: var(--color-surface-hover);
 }
 
 .image-card figcaption {
@@ -563,12 +578,12 @@ select:focus {
 
 .bookmark-btn:hover {
   color: var(--color-text);
-  background: rgba(242, 244, 243, 0.08);
+  background: var(--overlay-bg);
 }
 
 .bookmark-btn.saved {
-  color: var(--paper);
-  background: var(--color-surface-raised);
+  color: var(--color-text);
+  background: var(--color-surface-hover);
 }
 
 /* Usuarios */
@@ -593,7 +608,7 @@ select:focus {
 }
 
 .user-chip:hover {
-  background: var(--color-surface-raised);
+  background: var(--color-surface-hover);
   text-decoration: none;
 }
 
@@ -608,7 +623,7 @@ select:focus {
   width: 34px;
   height: 34px;
   border-radius: 50%;
-  background: var(--color-surface-raised);
+  background: var(--color-surface-hover);
   border: 1px solid var(--color-border);
   color: var(--color-text);
   font-weight: 700;
@@ -651,7 +666,7 @@ select:focus {
   margin-left: 0.5rem;
   padding: 0.05rem 0.5rem;
   border-radius: 999px;
-  background: var(--color-surface-raised);
+  background: var(--color-surface-hover);
   border: 1px solid var(--color-border);
   color: var(--color-text-muted);
   font-size: 0.7rem;
@@ -663,9 +678,9 @@ select:focus {
 
 /* Utilidades */
 .error {
-  background: rgba(229, 72, 77, 0.12);
-  border: 1px solid var(--color-danger);
-  color: #ff9d9f;
+  background: var(--color-danger-action);
+  border: 1px solid var(--color-text-danger);
+  color: var(--color-text-danger);
   padding: 0.6rem 0.9rem;
   border-radius: var(--radius-sm);
 }
@@ -685,9 +700,9 @@ select:focus {
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
-  background: var(--color-glass);
-  -webkit-backdrop-filter: blur(var(--blur));
-  backdrop-filter: blur(var(--blur));
+  background: var(--overlay-bg);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
   border-radius: var(--radius-lg);
   padding: 1.75rem;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
@@ -704,7 +719,7 @@ select:focus {
 
 .upload-card input[type='text'],
 .upload-card textarea {
-  background: var(--color-surface-raised);
+  background: var(--color-surface-hover);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   color: var(--color-text);
@@ -737,7 +752,7 @@ select:focus {
 
 .file-drop:hover,
 .file-drop.dragging {
-  background: rgba(242, 244, 243, 0.05);
+  background: var(--overlay-bg-subtle);
   border-color: var(--color-accent);
 }
 
@@ -772,7 +787,7 @@ select:focus {
 }
 
 .explore-search input[type='search'] {
-  background: var(--color-surface-raised);
+  background: var(--color-surface-hover);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   color: var(--color-text);
@@ -808,7 +823,7 @@ select:focus {
   background: linear-gradient(
     100deg,
     var(--color-surface) 40%,
-    var(--color-surface-raised) 50%,
+    var(--color-surface-hover) 50%,
     var(--color-surface) 60%
   );
   background-size: 200% 100%;
@@ -834,12 +849,12 @@ select:focus {
 }
 
 .carousel::-webkit-scrollbar-track {
-  background: rgba(242, 244, 243, 0.05);
+  background: var(--overlay-bg-subtle);
   border-radius: 999px;
 }
 
 .carousel::-webkit-scrollbar-thumb {
-  background: var(--color-surface-raised);
+  background: var(--color-surface-hover);
   border-radius: 999px;
 }
 
@@ -867,7 +882,7 @@ select:focus {
   max-height: 75vh;
   object-fit: contain;
   border-radius: var(--radius);
-  background: var(--color-surface-raised);
+  background: var(--color-surface-hover);
 }
 
 /* Volver al inicio: ícono flotante sobre la imagen (arriba a la izquierda),
@@ -902,7 +917,7 @@ select:focus {
   padding: 0.35rem 0.75rem 0.35rem 0.35rem;
   border-radius: 999px;
   background: var(--color-surface);
-  border: 1px solid var(--color-glass-border);
+  border: 1px solid var(--overlay-border);
   color: var(--color-text);
   text-decoration: none;
   margin-bottom: 0.75rem;
@@ -910,7 +925,7 @@ select:focus {
 }
 
 .detail-owner:hover {
-  background: var(--color-surface-raised);
+  background: var(--color-surface-hover);
   border-color: var(--color-border);
 }
 
@@ -940,7 +955,7 @@ select:focus {
   margin: 0.5rem 0 0;
   padding: 0.15rem 0.65rem;
   border-radius: 999px;
-  background: var(--color-surface-raised);
+  background: var(--color-surface-hover);
   border: 1px solid var(--color-border);
   color: var(--color-text-muted);
   font-size: 0.8rem;
@@ -979,7 +994,7 @@ select:focus {
   background: linear-gradient(
     100deg,
     var(--color-surface) 40%,
-    var(--color-surface-raised) 50%,
+    var(--color-surface-hover) 50%,
     var(--color-surface) 60%
   );
   background-size: 200% 100%;
@@ -1030,7 +1045,7 @@ select:focus {
   overflow: auto;
   background: var(--color-surface);
   color: var(--color-text);
-  border: 1px solid var(--color-glass-border);
+  border: 1px solid var(--overlay-border);
   border-radius: var(--radius-lg);
   box-shadow: 0 24px 64px rgba(0, 0, 0, 0.5);
   padding: 1.25rem 1.5rem;
@@ -1075,7 +1090,7 @@ select:focus {
 
 .dialog-close:hover {
   color: var(--color-text);
-  background: rgba(242, 244, 243, 0.08);
+  background: var(--overlay-bg);
 }
 
 .dialog-body .form {
@@ -1087,7 +1102,7 @@ select:focus {
 /* Tarjeta tipo diálogo para páginas completas (login/registro) */
 .dialog-card {
   background: var(--color-surface);
-  border: 1px solid var(--color-glass-border);
+  border: 1px solid var(--overlay-border);
   border-radius: var(--radius-lg);
   box-shadow: 0 24px 64px rgba(0, 0, 0, 0.5);
   padding: 1.5rem;
@@ -1130,7 +1145,7 @@ select:focus {
 
 .media-editor-fields input,
 .media-editor-fields textarea {
-  background: var(--color-surface-raised);
+  background: var(--color-surface-hover);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   color: var(--color-text);
@@ -1170,13 +1185,13 @@ select:focus {
 .profile-edit-preview {
   border-radius: var(--radius);
   overflow: hidden;
-  background: var(--color-surface-raised);
+  background: var(--color-surface-hover);
 }
 
 .profile-edit-preview-banner {
   position: relative;
   width: 100%;
-  background: var(--color-surface-raised);
+  background: var(--color-surface-hover);
 }
 
 /* La imagen del banner conserva su ratio y usa la misma posición que el perfil */
@@ -1191,7 +1206,7 @@ select:focus {
   width: 100%;
   height: 100%;
   border: none;
-  background: var(--color-surface-raised);
+  background: var(--color-surface-hover);
   color: var(--color-text-muted);
   font-family: inherit;
   font-size: 0.9rem;
@@ -1226,7 +1241,7 @@ select:focus {
   border-radius: 50%;
   overflow: hidden;
   border: 3px solid rgba(244, 244, 244, 0.4);
-  background: var(--color-surface-raised);
+  background: var(--color-surface-hover);
   z-index: 2;
 }
 
@@ -1277,8 +1292,8 @@ select:focus {
   width: 100%;
   height: 100%;
   border-radius: 50%;
-  background: rgba(10, 9, 8, 0.55);
-  color: #f4f4f4;
+  background: rgba(0, 0, 0, 0.55);
+  color: var(--color-text);
   font-size: 1.1rem;
   opacity: 0;
 }
@@ -1359,7 +1374,7 @@ select:focus {
   font-size: 2.4rem;
   font-weight: 700;
   color: var(--color-text);
-  background: var(--color-surface-raised);
+  background: var(--color-surface-hover);
   border: 1px solid var(--color-border);
 }
 
@@ -1408,7 +1423,7 @@ select:focus {
 
 .password-toggle:hover {
   color: var(--color-text);
-  background: rgba(242, 244, 243, 0.08);
+  background: var(--overlay-bg);
 }
 
 .password-toggle-icon {
@@ -1433,12 +1448,12 @@ select:focus {
 }
 
 .username-status.available {
-  color: #7bc98a;
+  color: var(--color-success);
 }
 
 .username-status.taken,
 .username-status.invalid {
-  color: var(--color-danger);
+  color: var(--color-text-danger);
 }
 
 /* Los tableros ocultos (tabs feed/saved) no ocupan espacio ni se re-montan */

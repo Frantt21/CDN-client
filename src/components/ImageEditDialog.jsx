@@ -50,6 +50,7 @@ export function ImageEditDialog({ image, onClose, onSaved }) {
         <label>
           {t('upload.nameLabel')}
           <input
+            className="edit-input"
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
@@ -60,6 +61,7 @@ export function ImageEditDialog({ image, onClose, onSaved }) {
         <label>
           {t('upload.categoryLabel')}
           <input
+            className="edit-input"
             type="text"
             value={category}
             onChange={(e) => setCategory(e.target.value)}
@@ -79,6 +81,7 @@ export function ImageEditDialog({ image, onClose, onSaved }) {
         <label>
           {t('upload.descriptionLabel')}
           <textarea
+            className="edit-input"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             rows={3}
