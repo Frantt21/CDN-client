@@ -7,6 +7,7 @@ import { FiEye, FiEyeOff } from 'react-icons/fi'
 
 function PasswordField({ value, onChange, autoComplete, minLength, label }) {
   const [visible, setVisible] = useState(false)
+  const { t } = useTranslation()
   return (
     <label className="password-field">
       {label ?? t('register.password')}

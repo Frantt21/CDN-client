@@ -6,12 +6,14 @@ import { useAuth } from '../auth/AuthContext'
 import { FiEye, FiEyeOff } from 'react-icons/fi'
 
 function PasswordField({ value, onChange, autoComplete }) {
+  const { t } = useTranslation()
   const [visible, setVisible] = useState(false)
   return (
     <label className="password-field">
       {t('login.password')}
       <div className="password-input-wrap">
         <input
+          className="password-input"
           type={visible ? 'text' : 'password'}
           value={value}
           onChange={(e) => onChange(e.target.value)}
@@ -64,6 +66,7 @@ export function LoginPage() {
           <label>
             {t('login.credential')}
             <input
+              className="login-input"
               type="text"
               value={credential}
               onChange={(e) => setCredential(e.target.value)}
